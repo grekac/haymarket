@@ -31,12 +31,12 @@ export async function GET(req: NextRequest) {
     gen.model.slug
   );
 
-  if (isRealCarPhoto(url)) {
+  if (url && isRealCarPhoto(url)) {
     await prisma.carGeneration.update({
       where: { id },
       data: { imageUrl: url },
     });
-    return NextResponse.json({ url: url ?? null });
+    return NextResponse.json({ url });
   }
 
   return NextResponse.json({ url: null });
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       gen.model.slug
     );
 
-    if (isRealCarPhoto(url)) {
+    if (url && isRealCarPhoto(url)) {
       await prisma.carGeneration.update({
         where: { id: gen.id },
         data: { imageUrl: url },

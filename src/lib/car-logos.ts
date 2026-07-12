@@ -261,7 +261,7 @@ export function sortBrandsByPopularity<T extends { slug: string; name: string }>
   });
 }
 
-export function splitBrandsByPopularity<T extends { slug: string }>(brands: T[]) {
+export function splitBrandsByPopularity<T extends { slug: string; name: string }>(brands: T[]) {
   const sorted = sortBrandsByPopularity(brands);
   const popular: T[] = [];
   const other: T[] = [];
