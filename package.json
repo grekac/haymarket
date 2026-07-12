@@ -12,6 +12,7 @@
     "start:socket": "tsx server/socket/index.ts",
     "lint": "next lint",
     "db:push": "prisma db push",
+    "db:setup": "prisma db push && npm run db:seed",
     "db:seed": "tsx prisma/seed.ts",
     "db:fetch-vehicles": "tsx scripts/fetch-vehicles.ts",
     "db:resolve-logos": "tsx scripts/resolve-logos.ts",

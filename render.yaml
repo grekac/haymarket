@@ -1,5 +1,7 @@
-# HayMarket на Render — Blueprint
-# Перед деплоем создайте бесплатную БД на https://neon.tech и вставьте DATABASE_URL
+# HayMarket — Render + Supabase
+# 1) Создайте проект на https://supabase.com
+# 2) Скопируйте Connection strings из Settings → Database
+# 3) Вставьте в Environment на Render
 
 services:
   - type: web
@@ -9,11 +11,13 @@ services:
     region: frankfurt
     buildCommand: npm ci && npx prisma generate && npx prisma db push && npm run build
     startCommand: npm start
-    healthCheckPath: /
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
         sync: false
       - key: AUTH_SECRET
         generateValue: true

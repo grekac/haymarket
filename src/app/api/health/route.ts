@@ -24,7 +24,7 @@ export async function GET() {
         message: error instanceof Error ? error.message : String(error),
         env: { hasDb, hasAuth },
         hint: !hasDb
-          ? "Добавьте DATABASE_URL в Environment на Render"
+          ? "Добавьте DATABASE_URL и DIRECT_URL (Supabase) в Environment на Render"
           : "Запустите в Shell: npx prisma db push && npm run db:seed",
       },
       { status: 500 }
