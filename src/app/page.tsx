@@ -11,10 +11,23 @@ import { getHomeCategories } from "@/lib/categories";
 
 export default async function HomePage() {
   const session = await getSession();
-  const [categories, feed] = await Promise.all([
-    getHomeCategories(),
-    getPersonalizedHome(session?.id),
-  ]);
+
+  let categories: Awaited<ReturnType<typeof getHomeCategories>> = [];
+  let feed: Awaited<ReturnType<typeof getPersonalizedHome>> = {
+    insights: [],
+    newListings: [],
+    popularNearby: [],
+    total: 0,
+  };
+
+  try {
+    [categories, feed] = await Promise.all([
+      getHomeCategories(),
+      getPersonalizedHome(session?.id),
+    ]);
+  } catch (error) {
+    console.error("[homepage] database error:", error);
+  }
 
   const greeting = session
     ? `Привет, ${session.name.split(" ")[0]}`
