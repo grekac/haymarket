@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: haymarket-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: haymarket
+      POSTGRES_PASSWORD: haymarket
+      POSTGRES_DB: haymarket
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U haymarket"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  socket:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.socket
+    container_name: haymarket-socket
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      SOCKET_PORT: 3001
+      AUTH_SECRET: ${AUTH_SECRET:-haymarket-dev-secret}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: haymarket-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://haymarket:haymarket@postgres:5432/haymarket
+      AUTH_SECRET: ${AUTH_SECRET:-haymarket-dev-secret}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      NEXT_PUBLIC_SOCKET_URL: http://localhost:3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

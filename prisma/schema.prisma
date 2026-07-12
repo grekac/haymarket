@@ -1,0 +1,291 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ListingStatus {
+  ACTIVE
+  PENDING
+  REJECTED
+  SOLD
+  ARCHIVED
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  COMMERCIAL
+  LAND
+}
+
+enum DealType {
+  SALE
+  RENT
+}
+
+model Category {
+  id         String     @id @default(cuid())
+  name       String
+  slug       String     @unique
+  icon       String
+  imageUrl   String?
+  sortOrder  Int        @default(0)
+  isActive   Boolean    @default(true)
+  showOnHome Boolean    @default(true)
+  parentId   String?
+  parent     Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
+  children   Category[] @relation("CategoryChildren")
+  listings   Listing[]
+  createdAt  DateTime   @default(now())
+}
+
+model User {
+  id           String         @id @default(cuid())
+  name         String
+  phone        String         @unique
+  email        String?        @unique
+  passwordHash String?
+  avatar       String?
+  role         UserRole       @default(USER)
+  isBlocked    Boolean        @default(false)
+  isVerified   Boolean        @default(false)
+  verifiedAt   DateTime?
+  ratingAvg    Float          @default(0)
+  ratingCount  Int            @default(0)
+  listings     Listing[]
+  favorites    Favorite[]
+  buyerChats   Conversation[] @relation("BuyerConversations")
+  sellerChats  Conversation[] @relation("SellerConversations")
+  messages     Message[]
+  reviewsGiven    Review[]       @relation("ReviewsGiven")
+  reviewsReceived Review[]       @relation("ReviewsReceived")
+  savedSearches   SavedSearch[]
+  notifications   Notification[]
+  reports         Report[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Listing {
+  id          String            @id @default(cuid())
+  title       String
+  description String
+  price       Int
+  currency    String            @default("AMD")
+  city        String
+  district    String?
+  address     String?
+  latitude    Float?
+  longitude   Float?
+  condition   String            @default("used")
+  views       Int               @default(0)
+  status      ListingStatus     @default(ACTIVE)
+  videoUrl    String?
+  isPromoted  Boolean           @default(false)
+  promotedUntil DateTime?
+  aiPriceHint Int?
+  attributes  String?
+  categoryId  String
+  category    Category          @relation(fields: [categoryId], references: [id])
+  userId      String
+  user        User              @relation(fields: [userId], references: [id])
+  images      ListingImage[]
+  carDetails  CarDetails?
+  realEstate  RealEstateDetails?
+  favorites   Favorite[]
+  conversations Conversation[]
+  reviews     Review[]
+  reports     Report[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([categoryId])
+  @@index([city])
+  @@index([status])
+  @@index([createdAt])
+  @@index([isPromoted])
+}
+
+model ListingImage {
+  id        String  @id @default(cuid())
+  url       String
+  publicId  String?
+  sortOrder Int     @default(0)
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+model CarBrand {
+  id        String     @id @default(cuid())
+  name      String
+  slug      String     @unique
+  logoUrl   String
+  sortOrder Int        @default(0)
+  models    CarModel[]
+}
+
+model CarModel {
+  id          String          @id @default(cuid())
+  brandId     String
+  brand       CarBrand        @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String
+  sortOrder   Int             @default(0)
+  generations CarGeneration[]
+
+  @@unique([brandId, slug])
+}
+
+model CarGeneration {
+  id        String   @id @default(cuid())
+  modelId   String
+  model     CarModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  code      String
+  name      String?
+  yearFrom  Int
+  yearTo    Int?
+  imageUrl  String
+  sortOrder Int      @default(0)
+
+  @@unique([modelId, code])
+}
+
+model CarDetails {
+  id                 String  @id @default(cuid())
+  listingId          String  @unique
+  listing            Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  brand              String
+  model              String
+  generation         String?
+  year               Int
+  vin                String?
+  mileage            Int
+  transmission       String
+  engineType         String
+  engineVolume       Float?
+  power              Int?
+  driveType          String?
+  bodyType           String?
+  color              String?
+  ownersCount        Int?
+  customsCleared     Boolean @default(true)
+  exchangePossible   Boolean @default(false)
+  bargainingPossible Boolean @default(true)
+}
+
+model RealEstateDetails {
+  id             String       @id @default(cuid())
+  listingId      String       @unique
+  listing        Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  dealType       DealType     @default(SALE)
+  propertyType   PropertyType
+  area           Float
+  rooms          Int?
+  floor          Int?
+  totalFloors    Int?
+  buildingYear   Int?
+  renovationType String?
+  heating        String?
+  balcony        String?
+  bathrooms      Int?
+  furniture      Boolean      @default(false)
+  parking        Boolean      @default(false)
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  listingId String
+  listing   Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId   String
+  buyer     User      @relation("BuyerConversations", fields: [buyerId], references: [id])
+  sellerId  String
+  seller    User      @relation("SellerConversations", fields: [sellerId], references: [id])
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([listingId, buyerId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id])
+  content        String
+  lang           String?
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  rating     Int
+  comment    String?
+  authorId   String
+  author     User     @relation("ReviewsGiven", fields: [authorId], references: [id])
+  targetId   String
+  target     User     @relation("ReviewsReceived", fields: [targetId], references: [id])
+  listingId  String?
+  listing    Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  createdAt  DateTime @default(now())
+
+  @@unique([authorId, targetId, listingId])
+}
+
+model SavedSearch {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  filters       String
+  notifyEnabled Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  reason    String
+  createdAt DateTime @default(now())
+}

@@ -1,0 +1,48 @@
+# HayMarket на Render — Blueprint
+# Перед деплоем создайте бесплатную БД на https://neon.tech и вставьте DATABASE_URL
+
+services:
+  - type: web
+    name: haymarket
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npm start
+    releaseCommand: npx prisma db push
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_SOCKET_URL
+        fromService:
+          name: haymarket-socket
+          type: web
+          property: host
+      - key: NEXT_PUBLIC_APP_URL
+        fromService:
+          name: haymarket
+          type: web
+          property: host
+
+  - type: web
+    name: haymarket-socket
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci
+    startCommand: npm run start:socket
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
