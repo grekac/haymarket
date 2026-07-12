@@ -14,9 +14,13 @@ type SP = Promise<Record<string, string | undefined>>;
 
 export default async function SearchPage({ searchParams }: { searchParams: SP }) {
   const p = await searchParams;
-  const categories = await prisma.category.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } });
 
-  const result = await listingService.search({
+  let categories: Awaited<ReturnType<typeof prisma.category.findMany>> = [];
+  let result = { items: [] as Awaited<ReturnType<typeof listingService.search>>["items"], total: 0, page: 1, totalPages: 0 };
+
+  try {
+    categories = await prisma.category.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } });
+    result = await listingService.search({
     search: p.q,
     category: p.category,
     city: p.city,
@@ -32,7 +36,10 @@ export default async function SearchPage({ searchParams }: { searchParams: SP })
     propertyType: p.propertyType,
     dealType: p.dealType,
     rooms: p.rooms ? Number(p.rooms) : undefined,
-  });
+    });
+  } catch (error) {
+    console.error("[search] database error:", error);
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 md:py-10">

@@ -5,7 +5,12 @@ import { SectionHeader } from "@/components/home/SectionHeader";
 import { getHomeCategories } from "@/lib/categories";
 
 export default async function CategoriesPage() {
-  const categories = await getHomeCategories();
+  let categories: Awaited<ReturnType<typeof getHomeCategories>> = [];
+  try {
+    categories = await getHomeCategories();
+  } catch (error) {
+    console.error("[categories] database error:", error);
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 md:py-10">
