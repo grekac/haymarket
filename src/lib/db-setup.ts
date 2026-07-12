@@ -2,12 +2,12 @@ import { execSync } from "child_process";
 import { prisma } from "@/lib/prisma";
 
 export async function pushDatabaseSchema() {
-  const direct = process.env.DIRECT_URL || process.env.DATABASE_URL;
-  if (!direct) throw new Error("Нет DATABASE_URL / DIRECT_URL");
+  const direct = process.env.DATABASE_URL;
+  if (!direct) throw new Error("Нет DATABASE_URL");
 
   execSync("npx prisma db push --accept-data-loss", {
     stdio: "pipe",
-    env: { ...process.env, DIRECT_URL: direct, DATABASE_URL: process.env.DATABASE_URL || direct },
+    env: { ...process.env, DATABASE_URL: direct },
   });
 }
 

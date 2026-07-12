@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
         ok: false,
         steps,
         error: error instanceof Error ? error.message : String(error),
-        hint: "Проверьте DATABASE_URL и DIRECT_URL (логин postgres, хост db.qfrtdhkgmssbqdvqjxfe.supabase.co)",
+        hint: "Проверьте DATABASE_URL (логин postgres, хост db.qfrtdhkgmssbqdvqjxfe.supabase.co)",
       },
       { status: 500 }
     );
