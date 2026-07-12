@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { databaseUrlHint, isDirectSupabaseHost } from "@/lib/database-url";
 import { prisma } from "@/lib/prisma";
 
 /** Render health check — всегда HTTP 200, иначе деплой падает до /api/setup */
@@ -41,12 +42,17 @@ export async function GET() {
       });
     }
   } catch (error) {
+    const dbUrl = process.env.DATABASE_URL ?? "";
+    const usesDirectHost = isDirectSupabaseHost(dbUrl);
+
     return NextResponse.json({
       ok: false,
       database: "connection_error",
       message: error instanceof Error ? error.message : String(error),
-      env: { hasDb, hasAuth, hasSetup },
-      hint: "Проверьте DATABASE_URL: postgresql://postgres:ПАРОЛЬ@db.qfrtdhkgmssbqdvqjxfe.supabase.co:5432/postgres",
+      env: { hasDb, hasAuth, hasSetup, usesDirectHost },
+      hint: usesDirectHost
+        ? databaseUrlHint()
+        : "Проверьте пароль и Session pooler URI из Supabase → Connect. " + databaseUrlHint(),
     });
   }
 }

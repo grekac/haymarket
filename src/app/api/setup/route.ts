@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
         ok: false,
         steps,
         error: error instanceof Error ? error.message : String(error),
-        hint: "Проверьте DATABASE_URL (логин postgres, хост db.qfrtdhkgmssbqdvqjxfe.supabase.co)",
+        hint: "Используйте Session pooler из Supabase → Connect (не прямой db.*.supabase.co). Логин: postgres.qfrtdhkgmssbqdvqjxfe",
       },
       { status: 500 }
     );
