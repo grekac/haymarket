@@ -11,6 +11,7 @@ services:
     region: frankfurt
     buildCommand: npm ci --include=dev && npx prisma generate && npm run build
     startCommand: npm start
+    releaseCommand: npx prisma db push --accept-data-loss
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
@@ -20,6 +21,8 @@ services:
       - key: DIRECT_URL
         sync: false
       - key: AUTH_SECRET
+        generateValue: true
+      - key: SETUP_SECRET
         generateValue: true
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
