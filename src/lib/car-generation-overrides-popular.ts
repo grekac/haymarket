@@ -1,55 +1,7 @@
 import type { OverrideDef } from "./car-generation-overrides";
 
-/** Популярные модели: точные поколения и годы (как на Авито) */
+/** Популярные модели (не BMW — см. car-generation-overrides-bmw.ts) */
 export const POPULAR_GENERATION_OVERRIDES: OverrideDef[] = [
-  {
-    brand: "BMW",
-    modelName: "3 Series",
-    modelKeys: ["series3", "3erreihe", "3er"],
-    generations: [
-      { code: "G20", yearFrom: 2019, yearTo: null, label: "G20" },
-      { code: "F30", yearFrom: 2012, yearTo: 2019, label: "F30" },
-      { code: "E90", yearFrom: 2005, yearTo: 2012, label: "E90" },
-      { code: "E46", yearFrom: 1998, yearTo: 2006, label: "E46" },
-      { code: "E36", yearFrom: 1990, yearTo: 2000, label: "E36" },
-      { code: "E30", yearFrom: 1982, yearTo: 1994, label: "E30" },
-      { code: "E21", yearFrom: 1975, yearTo: 1983, label: "E21" },
-    ],
-  },
-  {
-    brand: "BMW",
-    modelName: "5 Series",
-    modelKeys: ["series5", "5erreihe", "5er"],
-    generations: [
-      { code: "G30", yearFrom: 2017, yearTo: null, label: "G30" },
-      { code: "F10", yearFrom: 2010, yearTo: 2017, label: "F10" },
-      { code: "E60", yearFrom: 2003, yearTo: 2010, label: "E60" },
-      { code: "E39", yearFrom: 1995, yearTo: 2004, label: "E39" },
-      { code: "E34", yearFrom: 1988, yearTo: 1996, label: "E34" },
-      { code: "E28", yearFrom: 1981, yearTo: 1988, label: "E28" },
-    ],
-  },
-  {
-    brand: "BMW",
-    modelName: "X5",
-    modelKeys: ["x5"],
-    generations: [
-      { code: "G05", yearFrom: 2018, yearTo: null, label: "G05" },
-      { code: "F15", yearFrom: 2013, yearTo: 2018, label: "F15" },
-      { code: "E70", yearFrom: 2006, yearTo: 2013, label: "E70" },
-      { code: "E53", yearFrom: 1999, yearTo: 2006, label: "E53" },
-    ],
-  },
-  {
-    brand: "BMW",
-    modelName: "X3",
-    modelKeys: ["x3"],
-    generations: [
-      { code: "G01", yearFrom: 2017, yearTo: null, label: "G01" },
-      { code: "F25", yearFrom: 2010, yearTo: 2017, label: "F25" },
-      { code: "E83", yearFrom: 2003, yearTo: 2010, label: "E83" },
-    ],
-  },
   {
     brand: "Mercedes-Benz",
     modelName: "C-Class",

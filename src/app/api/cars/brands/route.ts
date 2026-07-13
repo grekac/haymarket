@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { POPULAR_BRAND_SLUGS } from "@/lib/car-logos";
+import { FEATURED_BRAND_SLUGS } from "@/lib/car-allowed-brands";
+import { filterAllowedBrands } from "@/lib/car-allowed-brands";
 import { getMemoryBrands, shouldUseMemoryCarCatalog } from "@/lib/car-catalog-fallback";
 
 export const runtime = "nodejs";
+
+function filterBrands<T extends { slug: string; name: string }>(brands: T[]): T[] {
+  return filterAllowedBrands(brands);
+}
 
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
@@ -34,7 +39,7 @@ export async function GET(req: NextRequest) {
     if (brands.length === 0) {
       return NextResponse.json(getMemoryBrands({ all: true }));
     }
-    return NextResponse.json(brands);
+    return NextResponse.json(filterBrands(brands));
   }
 
   if (q) {
@@ -49,20 +54,20 @@ export async function GET(req: NextRequest) {
     if (result.length === 0) {
       return NextResponse.json(getMemoryBrands({ q, limit: limit || 300 }));
     }
-    return NextResponse.json(result);
+    return NextResponse.json(filterBrands(result));
   }
 
   if (popular) {
     const brands = await prisma.carBrand.findMany({
-      where: { slug: { in: POPULAR_BRAND_SLUGS } },
+      where: { slug: { in: FEATURED_BRAND_SLUGS } },
       select,
     });
     if (brands.length === 0) {
       return NextResponse.json(getMemoryBrands({ popular: true }));
     }
-    const order = new Map(POPULAR_BRAND_SLUGS.map((s, i) => [s, i]));
+    const order = new Map(FEATURED_BRAND_SLUGS.map((s, i) => [s, i]));
     brands.sort((a, b) => (order.get(a.slug) ?? 999) - (order.get(b.slug) ?? 999));
-    return NextResponse.json(brands);
+    return NextResponse.json(filterBrands(brands));
   }
 
   const brands = await prisma.carBrand.findMany({
@@ -75,5 +80,5 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(getMemoryBrands({ limit: limit || 500 }));
   }
 
-  return NextResponse.json(brands);
+  return NextResponse.json(filterBrands(brands));
 }

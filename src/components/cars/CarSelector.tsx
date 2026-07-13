@@ -379,7 +379,7 @@ export function CarSelector({ value, onChange, compact }: Props) {
             <Input
               value={brandSearch}
               onChange={(e) => setBrandSearch(e.target.value)}
-              placeholder="Поиск марки... (1166+ марок)"
+              placeholder="Поиск марки..."
               className="pl-10"
             />
           </div>

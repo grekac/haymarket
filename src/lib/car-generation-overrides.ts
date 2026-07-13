@@ -1,7 +1,8 @@
-import { PLACEHOLDER_IMAGE, normalizeModelMatchKey } from "./car-catalog-utils";
+import { PLACEHOLDER_IMAGE, brandToSlug, normalizeModelMatchKey } from "./car-catalog-utils";
 import { POPULAR_GENERATION_OVERRIDES } from "./car-generation-overrides-popular";
+import { BMW_GENERATION_OVERRIDES } from "./car-generation-overrides-bmw";
 
-type SeedGeneration = {
+export type SeedGeneration = {
   code: string;
   name: string;
   yearFrom: number;
@@ -11,18 +12,25 @@ type SeedGeneration = {
 
 export type OverrideDef = {
   brand: string;
+  brandSlug?: string;
   modelName: string;
   modelKeys: string[];
+  modelSlugs?: string[];
   generations: { code: string; yearFrom: number; yearTo: number | null; label: string }[];
 };
 
 /** Поколения как на Авито: короткая подпись + точные годы */
-const OVERRIDES: OverrideDef[] = [
-  ...POPULAR_GENERATION_OVERRIDES,
+export const ALL_GENERATION_OVERRIDES: OverrideDef[] = [
+  ...BMW_GENERATION_OVERRIDES,
+  ...POPULAR_GENERATION_OVERRIDES.filter(
+    (o) => o.brand !== "BMW" || !BMW_GENERATION_OVERRIDES.some((b) => b.modelName === o.modelName)
+  ),
   {
     brand: "Mercedes-Benz",
+    brandSlug: "mercedes-benz",
     modelName: "CLS",
     modelKeys: ["cls"],
+    modelSlugs: ["cls"],
     generations: [
       { code: "C219", yearFrom: 2004, yearTo: 2008, label: "C219" },
       { code: "C219 FL", yearFrom: 2008, yearTo: 2010, label: "C219 рестайлинг" },
@@ -34,11 +42,13 @@ const OVERRIDES: OverrideDef[] = [
   },
   {
     brand: "Mercedes-Benz",
+    brandSlug: "mercedes-benz",
     modelName: "G-Class",
-    modelKeys: ["g"],
+    modelKeys: ["gclass", "g"],
+    modelSlugs: ["g-class", "g"],
     generations: [
       { code: "W465 FL", yearFrom: 2024, yearTo: null, label: "W465 рестайлинг" },
-      { code: "W463 II", yearFrom: 2018, yearTo: 2025, label: "W463" },
+      { code: "W463 II", yearFrom: 2018, yearTo: 2025, label: "W463 II" },
       { code: "W463 FL4", yearFrom: 2015, yearTo: 2018, label: "W463 рестайлинг 4" },
       { code: "W463 FL3", yearFrom: 2012, yearTo: 2015, label: "W463 рестайлинг 3" },
       { code: "W463 FL2", yearFrom: 2008, yearTo: 2012, label: "W463 рестайлинг 2" },
@@ -53,23 +63,65 @@ function normalizeBrandKey(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
-function normalizeModelKey(name: string) {
-  return normalizeModelMatchKey(name);
+function toSeedGenerations(
+  gens: OverrideDef["generations"]
+): SeedGeneration[] {
+  return gens.map((g) => ({
+    code: g.code,
+    name: g.label,
+    yearFrom: g.yearFrom,
+    yearTo: g.yearTo,
+    imageUrl: PLACEHOLDER_IMAGE,
+  }));
+}
+
+function brandMatches(item: OverrideDef, brandSlug: string): boolean {
+  const slug = brandSlug.toLowerCase();
+  if (item.brandSlug === slug) return true;
+  if (brandToSlug(item.brand) === slug) return true;
+  return normalizeBrandKey(item.brand) === normalizeBrandKey(slug);
+}
+
+function modelMatches(item: OverrideDef, modelSlug: string, modelName?: string): boolean {
+  const slug = modelSlug.toLowerCase();
+  if (item.modelSlugs?.includes(slug)) return true;
+
+  const normSlug = normalizeModelMatchKey(slug);
+  if (item.modelKeys.includes(normSlug)) return true;
+
+  if (modelName) {
+    const normName = normalizeModelMatchKey(modelName);
+    if (item.modelKeys.includes(normName)) return true;
+  }
+
+  return false;
+}
+
+/** Найти точные поколения по slug марки/модели (приоритет над сырым каталогом) */
+export function lookupGenerationOverride(
+  brandSlug: string,
+  modelSlug: string,
+  modelName?: string
+): SeedGeneration[] | null {
+  for (const item of ALL_GENERATION_OVERRIDES) {
+    if (!brandMatches(item, brandSlug)) continue;
+    if (!modelMatches(item, modelSlug, modelName)) continue;
+    return toSeedGenerations(item.generations);
+  }
+  return null;
 }
 
 export function buildGenerationOverridesIndex(): Map<string, SeedGeneration[]> {
   const index = new Map<string, SeedGeneration[]>();
 
-  for (const item of OVERRIDES) {
-    const brandKey = normalizeBrandKey(item.brand);
-    for (const modelKey of item.modelKeys) {
-      const gens: SeedGeneration[] = item.generations.map((g) => ({
-        code: g.code,
-        name: g.label,
-        yearFrom: g.yearFrom,
-        yearTo: g.yearTo,
-        imageUrl: PLACEHOLDER_IMAGE,
-      }));
+  for (const item of ALL_GENERATION_OVERRIDES) {
+    const brandKey = normalizeBrandKey(item.brandSlug ?? brandToSlug(item.brand));
+    const keys = new Set<string>(item.modelKeys);
+    for (const slug of item.modelSlugs ?? []) {
+      keys.add(normalizeModelMatchKey(slug));
+    }
+    const gens = toSeedGenerations(item.generations);
+    for (const modelKey of keys) {
       index.set(`${brandKey}|${modelKey}`, gens);
     }
   }
@@ -78,5 +130,5 @@ export function buildGenerationOverridesIndex(): Map<string, SeedGeneration[]> {
 }
 
 export function modelMatchKeyFromNames(brandName: string, modelName: string) {
-  return `${normalizeBrandKey(brandName)}|${normalizeModelKey(modelName)}`;
+  return `${normalizeBrandKey(brandName)}|${normalizeModelMatchKey(modelName)}`;
 }

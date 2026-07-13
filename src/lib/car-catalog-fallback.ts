@@ -1,5 +1,5 @@
 import { buildCarCatalogFromPackage } from "@/lib/car-catalog-builder";
-import { POPULAR_BRAND_SLUGS } from "@/lib/car-logos";
+import { FEATURED_BRAND_SLUGS, filterAllowedBrands } from "@/lib/car-allowed-brands";
 import { prisma } from "@/lib/prisma";
 import { lookupGenerationImage } from "@/lib/car-generation-images";
 import { isRealCarPhoto } from "@/lib/car-images";
@@ -128,10 +128,10 @@ export function getMemoryBrands(opts: {
   all?: boolean;
 }): MemBrand[] {
   ensureCatalog();
-  let brands = [...brandById.values()];
+  let brands = filterAllowedBrands([...brandById.values()]);
 
   if (opts.popular) {
-    const order = new Map(POPULAR_BRAND_SLUGS.map((s, i) => [s, i]));
+    const order = new Map(FEATURED_BRAND_SLUGS.map((s, i) => [s, i]));
     brands = brands
       .filter((b) => order.has(b.slug))
       .sort((a, b) => (order.get(a.slug) ?? 999) - (order.get(b.slug) ?? 999));

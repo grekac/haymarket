@@ -2,6 +2,8 @@ const LOGO_CDN = "https://cdn.jsdelivr.net/gh/filippofilip95/car-logos-dataset@m
 const WIKI_API = "https://en.wikipedia.org/api/rest_v1/page/summary/";
 const COMMONS_API = "https://commons.wikimedia.org/w/api.php";
 
+import { FEATURED_BRAND_SLUGS } from "./car-allowed-brands";
+
 export const LOGO_INITIALS = "__initials__";
 
 const LOGO_SLUG_ALIASES: Record<string, string[]> = {
@@ -234,17 +236,7 @@ export async function resolveBrandLogo(name: string, slug: string): Promise<stri
   return LOGO_INITIALS;
 }
 
-export const POPULAR_BRAND_SLUGS = [
-  "mercedes-benz", "bmw", "audi", "toyota", "honda", "hyundai", "kia",
-  "nissan", "ford", "chevrolet", "volkswagen", "lexus", "tesla", "lada",
-  "uaz", "gaz", "porsche", "mazda", "subaru", "mitsubishi", "renault",
-  "peugeot", "skoda", "volvo", "jeep", "land-rover", "genesis", "byd",
-  "geely", "chery", "haval", "opel", "dacia", "fiat", "jaguar", "mini",
-  "infiniti", "cadillac", "suzuki", "yamaha", "kawasaki", "man", "iveco",
-  "scania", "daewoo", "ssangyong", "bentley", "ferrari", "lamborghini",
-  "citroen", "seat", "cupra", "acura", "chrysler", "dodge", "gmc",
-  "buick", "lincoln", "ram", "isuzu", "daihatsu", "proton", "tata",
-];
+export const POPULAR_BRAND_SLUGS = FEATURED_BRAND_SLUGS;
 
 const POPULAR_ORDER = new Map(POPULAR_BRAND_SLUGS.map((s, i) => [s, i]));
 const POPULAR_SET = new Set(POPULAR_BRAND_SLUGS);

@@ -9,6 +9,7 @@ import {
   isMemoryCarId,
   memoryModelIdFromSlugs,
 } from "@/lib/car-catalog-fallback";
+import { lookupGenerationOverride } from "@/lib/car-generation-overrides";
 import type { RawGeneration } from "@/lib/car-generation-groups";
 
 export const runtime = "nodejs";
@@ -42,9 +43,23 @@ function enrichGenerationPhoto(
 function enrichMemoryGenerations(
   modelId: string,
   brandSlug: string,
-  modelSlug: string
+  modelSlug: string,
+  modelName?: string
 ) {
-  const generations = sanitizeRawGenerations(getMemoryGenerations(modelId)).map((gen) =>
+  const override = lookupGenerationOverride(brandSlug, modelSlug, modelName);
+  const source = override
+    ? override.map((g, i) => ({
+        id: `mem-gen-${brandSlug}-${modelSlug}-${g.code}`,
+        code: g.code,
+        name: g.name,
+        yearFrom: g.yearFrom,
+        yearTo: g.yearTo,
+        imageUrl: g.imageUrl,
+        modelId,
+      }))
+    : sanitizeRawGenerations(getMemoryGenerations(modelId));
+
+  const generations = source.map((gen) =>
     enrichGenerationPhoto(gen, brandSlug, modelSlug)
   );
 
@@ -77,13 +92,13 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json(
-      enrichMemoryGenerations(modelId, model.brandSlug, model.slug)
+      enrichMemoryGenerations(modelId, model.brandSlug, model.slug, model.name)
     );
   }
 
   const model = await prisma.carModel.findUnique({
     where: { id: modelId },
-    select: { slug: true, brand: { select: { slug: true } } },
+    select: { slug: true, name: true, brand: { select: { slug: true } } },
   });
 
   if (!model) {
@@ -104,12 +119,19 @@ export async function GET(req: NextRequest) {
     },
   });
 
+  const override = lookupGenerationOverride(model.brand.slug, model.slug, model.name);
+  if (override) {
+    return NextResponse.json(
+      enrichMemoryGenerations(modelId, model.brand.slug, model.slug, model.name)
+    );
+  }
+
   if (generations.length === 0) {
     const memModelId = memoryModelIdFromSlugs(model.brand.slug, model.slug);
     const memGens = getMemoryGenerations(memModelId);
     if (memGens.length > 0) {
       return NextResponse.json(
-        enrichMemoryGenerations(memModelId, model.brand.slug, model.slug)
+        enrichMemoryGenerations(memModelId, model.brand.slug, model.slug, model.name)
       );
     }
   }

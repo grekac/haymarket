@@ -12,6 +12,7 @@ import {
   normalizeModelMatchKey,
 } from "./car-catalog-utils";
 import { buildGenerationOverridesIndex } from "./car-generation-overrides";
+import { isAllowedBrandName, isAllowedBrandSlug } from "./car-allowed-brands";
 
 function isValidGenerationCode(code: string, brandSlug?: string, modelSlug?: string): boolean {
   if (!code || code === "ALL") return true;
@@ -168,6 +169,9 @@ export function buildCarCatalogFromPackage(): SeedBrand[] {
 
   function ensureBrand(name: string, slug?: string) {
     const s = slug ?? brandToSlug(name);
+    if (!isAllowedBrandSlug(s) && !isAllowedBrandName(name)) {
+      return null;
+    }
     const key = normalizeBrandKey(name);
     if (!brandMap.has(key)) {
       brandMap.set(key, { name, slug: s, models: new Map() });
@@ -186,6 +190,7 @@ export function buildCarCatalogFromPackage(): SeedBrand[] {
     kind: string = "car"
   ) {
     const brand = ensureBrand(brandName, brandSlug);
+    if (!brand) return;
     const displayName = displayModelName(modelName, kind);
     const mKey = `${kind}|${normalizeModelKey(modelName)}`;
     const genKey = modelMatchKey(brandName, modelName);
@@ -279,7 +284,9 @@ export function buildCarCatalogFromPackage(): SeedBrand[] {
     }
   }
 
-  return [...bySlug.values()].map((brand, index) => ({
+  return [...bySlug.values()]
+    .filter((b) => isAllowedBrandSlug(b.slug))
+    .map((brand, index) => ({
     ...brand,
     sortOrder: index + 1,
   })).filter((b) => b.models.length > 0);

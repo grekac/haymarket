@@ -61,6 +61,13 @@ export const GENERATION_IMAGE_CACHE: Record<string, string> = {
   "bmw|G01":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/2018_BMW_X3_xDrive20d_M_Sport_Automatic_2.0_Front.jpg/640px-2018_BMW_X3_xDrive20d_M_Sport_Automatic_2.0_Front.jpg",
 
+  "bmw|G15":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/2019_BMW_M850i_xDrive_Gran_Coup%C3%A9_F06_Front.jpg/640px-2019_BMW_M850i_xDrive_Gran_Coup%C3%A9_F06_Front.jpg",
+  "bmw|8-series|G15":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/2019_BMW_M850i_xDrive_Gran_Coup%C3%A9_F06_Front.jpg/640px-2019_BMW_M850i_xDrive_Gran_Coup%C3%A9_F06_Front.jpg",
+  "bmw|series-8|G15":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/2019_BMW_M850i_xDrive_Gran_Coup%C3%A9_F06_Front.jpg/640px-2019_BMW_M850i_xDrive_Gran_Coup%C3%A9_F06_Front.jpg",
+
   // ── Mercedes-Benz ──
   "mercedes-benz|c-class|W203":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Mercedes_W203_front_20080328.jpg/640px-Mercedes_W203_front_20080328.jpg",
