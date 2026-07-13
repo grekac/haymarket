@@ -94,8 +94,8 @@ export function CarContactActions({
 
   return (
     <div className={wrap}>
-      <div className="p-5 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-sm)]">
-        <p className="text-[30px] md:text-[34px] font-bold tracking-tight leading-none tabular-nums">
+      <div className="p-5 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-sm)] premium-card-hover animate-scale-in">
+        <p className="text-[30px] md:text-[34px] font-bold tracking-tight leading-none tabular-nums text-[var(--text-primary)]">
           {formatPrice(price, currency)}
         </p>
 

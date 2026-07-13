@@ -68,7 +68,7 @@ export function CarListingView({
             <CarDamageBadge extras={extras} />
             <CarExclusivityBadge />
 
-            <div className="lg:hidden">
+            <div className="lg:hidden animate-fade-up animate-delay-3">
               <CarContactActions
                 listingId={listing.id}
                 title={title}
@@ -112,7 +112,7 @@ export function CarListingView({
             <SafetyBanner />
             <ReportButton listingId={listing.id} />
 
-            <div className="lg:hidden">
+            <div className="lg:hidden animate-fade-up animate-delay-3">
               <CarSellerCard
                 sellerId={listing.user.id}
                 name={fixMojibake(listing.user.name)}
@@ -126,7 +126,7 @@ export function CarListingView({
             </div>
           </div>
 
-          <aside className="hidden lg:block space-y-4">
+          <aside className="hidden lg:block space-y-4 animate-fade-up animate-delay-2">
             <CarContactActions
               listingId={listing.id}
               title={title}
@@ -152,7 +152,7 @@ export function CarListingView({
         </div>
 
         {similar.length > 0 && (
-          <section className="mt-12 mb-8">
+          <section className="mt-12 mb-8 animate-fade-up animate-delay-7">
             <SectionHeader title={similarTitle} href={`/search?category=cars&brand=${encodeURIComponent(car.brand)}&model=${encodeURIComponent(car.model)}`} />
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 mt-4">
               {similar.map((l) => (

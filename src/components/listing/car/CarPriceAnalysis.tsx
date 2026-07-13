@@ -1,12 +1,14 @@
+"use client";
+
 import { Sparkles, TrendingDown, TrendingUp, Minus, Droplets } from "lucide-react";
-import { Card } from "@/components/ui/Card";
 import { formatPrice } from "@/lib/utils";
 import type { PriceEstimateResult } from "@/lib/ai-price-estimate";
+import { cn } from "@/lib/utils";
 
 const VERDICT = {
-  good_deal: { label: "Выгодная цена", color: "text-emerald-600", bg: "bg-emerald-500/10", Icon: TrendingDown },
-  fair: { label: "Рыночная цена", color: "text-blue-600", bg: "bg-blue-500/10", Icon: Minus },
-  above_market: { label: "Чуть выше рынка", color: "text-amber-600", bg: "bg-amber-500/10", Icon: TrendingUp },
+  good_deal: { label: "Выгодная цена", color: "text-emerald-600", bg: "bg-emerald-500/10", bar: "bg-emerald-500", Icon: TrendingDown },
+  fair: { label: "Рыночная цена", color: "text-blue-600", bg: "bg-blue-500/10", bar: "bg-blue-500", Icon: Minus },
+  above_market: { label: "Чуть выше рынка", color: "text-amber-600", bg: "bg-amber-500/10", bar: "bg-amber-500", Icon: TrendingUp },
 } as const;
 
 type Props = {
@@ -38,6 +40,9 @@ export function CarPriceAnalysis({
     (listedPrice / price <= 0.94 ? "good_deal" : listedPrice / price >= 1.08 ? "above_market" : "fair");
   const meta = VERDICT[verdict];
 
+  const marketPos =
+    min && max ? Math.min(100, Math.max(0, ((listedPrice - min) / (max - min)) * 100)) : 50;
+
   const tips: string[] = [];
   if (estimate?.reasoning) tips.push(estimate.reasoning);
   if (verdict === "above_market") tips.push("Цена чуть выше рынка — возможен торг.");
@@ -47,20 +52,22 @@ export function CarPriceAnalysis({
     tips.push("Хорошая ликвидность модели на рынке Армении.");
 
   return (
-    <Card className="p-5 md:p-6 border-[var(--border)] bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-secondary)]/50">
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
-          <Sparkles className="w-5 h-5 text-[var(--accent)]" />
+    <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--bg-card)] via-[var(--accent)]/[0.03] to-[var(--bg-secondary)]/40 premium-card-hover animate-fade-up animate-delay-4">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/5 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="relative flex items-start gap-3">
+        <div className="w-11 h-11 rounded-xl bg-[var(--accent)]/12 flex items-center justify-center shrink-0">
+          <Sparkles className="w-5 h-5 text-[var(--accent)] animate-float-soft" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="font-semibold text-base">AI-анализ цены</h2>
-            <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${meta.bg} ${meta.color}`}>
+            <span className={cn("inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full animate-scale-in", meta.bg, meta.color)}>
               <meta.Icon className="w-3 h-3" />
               {meta.label}
             </span>
           </div>
-          <p className="text-2xl font-bold mt-2 tracking-tight">~{formatPrice(price, currency)}</p>
+          <p className="text-2xl font-bold mt-2 tracking-tight tabular-nums">~{formatPrice(price, currency)}</p>
           {min && max && (
             <p className="text-xs text-[var(--text-muted)] mt-1">
               Рынок: {formatPrice(min, currency)} — {formatPrice(max, currency)}
@@ -69,16 +76,35 @@ export function CarPriceAnalysis({
         </div>
       </div>
 
+      {min && max && (
+        <div className="relative mt-4">
+          <div className="h-2 rounded-full bg-[var(--bg-secondary)] overflow-hidden">
+            <div
+              className={cn("h-full rounded-full transition-all duration-700 ease-out", meta.bar)}
+              style={{ width: `${marketPos}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[10px] text-[var(--text-muted)] mt-1.5">
+            <span>Ниже рынка</span>
+            <span>Выше рынка</span>
+          </div>
+        </div>
+      )}
+
       {tips.length > 0 && (
-        <ul className="mt-4 space-y-2">
+        <ul className="relative mt-4 space-y-2">
           {tips.map((tip, i) => (
-            <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
+            <li
+              key={i}
+              className="flex items-start gap-2 text-sm text-[var(--text-secondary)] animate-slide-in-right"
+              style={{ animationDelay: `${0.1 + i * 0.08}s` }}
+            >
               <Droplets className="w-4 h-4 shrink-0 text-[var(--accent)] mt-0.5" />
               <span>{tip}</span>
             </li>
           ))}
         </ul>
       )}
-    </Card>
+    </div>
   );
 }

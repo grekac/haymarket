@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { MapPin } from "lucide-react";
-import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
 
 const BOUNDS = { minLat: 38.8, maxLat: 41.3, minLng: 43.4, maxLng: 46.6 };
@@ -31,7 +30,7 @@ export function CarLocationBlock({
   const label = [city, district, address].filter(Boolean).join(", ");
 
   return (
-    <Card className="p-5 md:p-6">
+    <div className="p-5 md:p-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] premium-card-hover animate-fade-up animate-delay-6">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="font-semibold text-base">Расположение</h2>
@@ -60,7 +59,7 @@ export function CarLocationBlock({
         >
           <div className="absolute inset-0 opacity-25 bg-[url('https://tile.openstreetmap.org/6/38/24.png')] bg-cover" />
           <span
-            className="absolute w-4 h-4 rounded-full bg-[var(--accent)] border-2 border-white shadow-lg"
+            className="absolute w-5 h-5 rounded-full bg-[var(--accent)] border-2 border-white shadow-lg animate-pulse-ring"
             style={{
               left: `${toPercent(latitude!, longitude!).x}%`,
               top: `${toPercent(latitude!, longitude!).y}%`,
@@ -69,6 +68,6 @@ export function CarLocationBlock({
           />
         </div>
       )}
-    </Card>
+    </div>
   );
 }

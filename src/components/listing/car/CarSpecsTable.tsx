@@ -84,7 +84,7 @@ export function CarSpecsTable({
   const damaged = extras.bodyDamaged === true;
 
   return (
-    <Card className="p-5 md:p-6 overflow-hidden">
+    <Card className="p-5 md:p-6 overflow-hidden premium-card-hover animate-fade-up animate-delay-5">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div>
           <h2 className="font-semibold text-base">Характеристики</h2>
@@ -112,7 +112,7 @@ export function CarSpecsTable({
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="mt-4 w-full h-11 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors flex items-center justify-center gap-2"
+        className="mt-4 w-full h-11 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:border-[var(--accent)]/30 transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
       >
         {expanded ? "Скрыть подробности" : "Подробные характеристики"}
         <ChevronDown className={cn("w-4 h-4 transition-transform", expanded && "rotate-180")} />
@@ -139,17 +139,18 @@ export function CarDamageBadge({ extras }: { extras: CarListingExtras }) {
   return (
     <div
       className={cn(
-        "flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-2xl border",
+        "relative overflow-hidden flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-2xl border animate-fade-up animate-delay-2",
         damaged
-          ? "border-red-500/20 bg-red-500/[0.04]"
-          : "border-emerald-500/20 bg-emerald-500/[0.04]"
+          ? "border-red-500/25 bg-gradient-to-r from-red-500/[0.06] to-transparent"
+          : "border-emerald-500/25 bg-gradient-to-r from-emerald-500/[0.06] to-transparent"
       )}
     >
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="absolute inset-0 listing-shimmer pointer-events-none opacity-30" />
+      <div className="relative flex items-center gap-3 min-w-0">
         <div
           className={cn(
-            "w-11 h-11 rounded-xl flex items-center justify-center shrink-0",
-            damaged ? "bg-red-500/15 text-red-600" : "bg-emerald-500/15 text-emerald-600"
+            "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-300",
+            damaged ? "bg-red-500/15 text-red-600 animate-pulse-ring" : "bg-emerald-500/15 text-emerald-600"
           )}
         >
           {damaged ? <ShieldAlert className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}

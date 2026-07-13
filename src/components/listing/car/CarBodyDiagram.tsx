@@ -164,53 +164,74 @@ function DiagramInner({
         </span>
       </div>
 
-      <div className="relative mx-auto w-full max-w-[200px]">
+      <div className="relative mx-auto w-full max-w-[220px] p-6 rounded-2xl bg-gradient-to-b from-[var(--bg-secondary)] to-[var(--bg-card)] border border-[var(--border)]">
+        {/* Сетка парковки */}
+        <div
+          className="absolute inset-4 rounded-xl opacity-[0.35]"
+          style={{
+            backgroundImage:
+              "linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)",
+            backgroundSize: "14px 14px",
+          }}
+        />
         <svg
           viewBox="0 0 120 180"
-          className="w-full h-auto drop-shadow-sm"
+          className="relative w-full h-auto drop-shadow-md animate-scale-in"
           role="img"
           aria-label="Схема кузова автомобиля вид сверху"
         >
-          {/* Тень кузова */}
-          <ellipse cx="60" cy="90" rx="52" ry="82" fill="var(--bg-secondary)" opacity="0.5" />
-          {/* Колёса */}
+          <defs>
+            <filter id="partShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodOpacity="0.15" />
+            </filter>
+            <linearGradient id="carBodyBase" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="var(--bg-card)" />
+              <stop offset="100%" stopColor="var(--bg-secondary)" />
+            </linearGradient>
+          </defs>
+          <ellipse cx="60" cy="90" rx="48" ry="76" fill="url(#carBodyBase)" opacity="0.9" />
           {[
             [8, 42],
             [112, 42],
             [8, 128],
             [112, 128],
           ].map(([cx, cy], i) => (
-            <ellipse
-              key={i}
-              cx={cx}
-              cy={cy}
-              rx={7}
-              ry={11}
-              fill="var(--text-muted)"
-              opacity={0.25}
-            />
+            <ellipse key={i} cx={cx} cy={cy} rx={8} ry={12} fill="#1a1a1a" opacity={0.22} />
           ))}
-          {BODY_PARTS.map((part) => {
+          {BODY_PARTS.map((part, idx) => {
             const state = partState(part.id, painted, damaged);
             const styles = STATE_STYLES[state];
             const isHover = hovered === part.id;
+            const isMarked = state !== "ok";
             return (
               <path
                 key={part.id}
                 d={part.d}
                 fill={styles.fill}
                 stroke={styles.stroke}
-                strokeWidth={isHover ? 2 : 1.2}
-                className="transition-all duration-150 cursor-default"
-                style={{ filter: isHover ? "brightness(1.08)" : undefined }}
+                strokeWidth={isHover ? 2.2 : 1.4}
+                filter="url(#partShadow)"
+                className={cn(
+                  "transition-all duration-200 cursor-default",
+                  isMarked && "animate-part-pop"
+                )}
+                style={{
+                  animationDelay: `${idx * 0.04}s`,
+                  transform: isHover ? "scale(1.02)" : undefined,
+                  transformOrigin: "center",
+                  filter: isHover ? "brightness(1.1)" : undefined,
+                }}
                 onMouseEnter={() => setHovered(part.id)}
                 onMouseLeave={() => setHovered(null)}
               />
             );
           })}
-          {/* Лобовое / заднее стекло */}
-          <path d="M 40 58 L 80 58 L 78 68 L 42 68 Z" fill="var(--accent)" opacity="0.12" stroke="none" />
-          <path d="M 42 118 L 78 118 L 76 128 L 44 128 Z" fill="var(--accent)" opacity="0.1" stroke="none" />
+          <path d="M 40 58 L 80 58 L 78 68 L 42 68 Z" fill="var(--accent)" opacity="0.18" stroke="var(--accent)" strokeOpacity="0.1" strokeWidth="0.5" />
+          <path d="M 42 118 L 78 118 L 76 128 L 44 128 Z" fill="var(--accent)" opacity="0.14" stroke="var(--accent)" strokeOpacity="0.1" strokeWidth="0.5" />
+          {/* Направление */}
+          <text x="60" y="6" textAnchor="middle" fontSize="6" fill="var(--text-muted)" opacity="0.6">
+            перед
+          </text>
         </svg>
 
         {hovered && (
