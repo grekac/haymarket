@@ -1,12 +1,26 @@
 import { prisma } from "@/lib/prisma";
 import type { ListingStatus, Prisma } from "@prisma/client";
 
-const listingInclude = {
+const listingListInclude = {
   category: true,
   images: { orderBy: { sortOrder: "asc" as const } },
+  user: {
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      avatar: true,
+      isVerified: true,
+      ratingAvg: true,
+      ratingCount: true,
+    },
+  },
+} satisfies Prisma.ListingInclude;
+
+const listingInclude = {
+  ...listingListInclude,
   carDetails: true,
   realEstate: true,
-  user: { select: { id: true, name: true, phone: true, avatar: true, isVerified: true, ratingAvg: true, ratingCount: true } },
 } satisfies Prisma.ListingInclude;
 
 export type ListingWithRelations = Prisma.ListingGetPayload<{
@@ -20,7 +34,7 @@ export class ListingRepository {
     skip?: number;
     take?: number;
   }) {
-    return prisma.listing.findMany({ ...params, include: listingInclude });
+    return prisma.listing.findMany({ ...params, include: listingListInclude });
   }
 
   async count(where?: Prisma.ListingWhereInput) {
@@ -55,7 +69,7 @@ export class ListingRepository {
       where: { categoryId, status: "ACTIVE", id: { not: excludeId } },
       orderBy: { createdAt: "desc" },
       take: limit,
-      include: listingInclude,
+      include: listingListInclude,
     });
   }
 }

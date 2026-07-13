@@ -89,11 +89,23 @@ export default async function HomePage() {
           subtitle={`${feed.total} на платформе`}
           href="/search?sort=newest"
         />
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none snap-x snap-mandatory md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-4 md:overflow-visible md:mx-0 md:px-0">
-          {feed.newListings.map((l) => (
-            <ListingCard key={l.id} listing={l} variant="horizontal" className="snap-start shrink-0 w-[280px] md:w-auto" />
-          ))}
-        </div>
+        {feed.newListings.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--text-muted)]">
+            <p className="mb-2">Объявлений пока нет на сайте.</p>
+            <p>
+              Проверка:{" "}
+              <Link href="/api/debug" className="text-[var(--accent)] underline">
+                /api/debug
+              </Link>
+            </p>
+          </div>
+        ) : (
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none snap-x snap-mandatory md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-4 md:overflow-visible md:mx-0 md:px-0">
+            {feed.newListings.map((l) => (
+              <ListingCard key={l.id} listing={l} variant="horizontal" className="snap-start shrink-0 w-[280px] md:w-auto" />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Popular nearby */}
