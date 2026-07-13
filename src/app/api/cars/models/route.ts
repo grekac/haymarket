@@ -5,9 +5,40 @@ import {
   sortModelsForDisplay,
   stripModelGenerations,
 } from "@/lib/car-model-filters";
-import { getMemoryModels, isMemoryCarId } from "@/lib/car-catalog-fallback";
+import {
+  getMemoryModels,
+  isMemoryCarId,
+  memoryBrandIdFromSlug,
+} from "@/lib/car-catalog-fallback";
 
 export const runtime = "nodejs";
+
+function buildMemoryModelsResponse(
+  brandId: string,
+  q: string,
+  carsOnly: boolean
+) {
+  const models = getMemoryModels(brandId, q || undefined).map((m) => ({
+    ...m,
+    generations: [{ code: "ALL" as const }],
+  }));
+  const filtered = sortModelsForDisplay(
+    carsOnly ? filterCarModelsForListing(models) : models
+  );
+  return stripModelGenerations(filtered);
+}
+
+async function resolveBrandSlug(brandId: string): Promise<string | null> {
+  if (isMemoryCarId(brandId)) {
+    const slug = brandId.slice("mem-brand-".length);
+    return slug.length > 0 ? slug : null;
+  }
+  const brand = await prisma.carBrand.findUnique({
+    where: { id: brandId },
+    select: { slug: true },
+  });
+  return brand?.slug ?? null;
+}
 
 export async function GET(req: NextRequest) {
   const brandId = req.nextUrl.searchParams.get("brandId");
@@ -20,14 +51,7 @@ export async function GET(req: NextRequest) {
   }
 
   if (isMemoryCarId(brandId)) {
-    const models = getMemoryModels(brandId, q || undefined).map((m) => ({
-      ...m,
-      generations: [{ code: "ALL" }],
-    }));
-    const filtered = sortModelsForDisplay(
-      carsOnly ? filterCarModelsForListing(models) : models
-    );
-    return NextResponse.json(stripModelGenerations(filtered));
+    return NextResponse.json(buildMemoryModelsResponse(brandId, q, carsOnly));
   }
 
   const select = {
@@ -44,6 +68,15 @@ export async function GET(req: NextRequest) {
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select,
     });
+
+    if (models.length === 0) {
+      const slug = await resolveBrandSlug(brandId);
+      if (slug) {
+        return NextResponse.json(
+          buildMemoryModelsResponse(memoryBrandIdFromSlug(slug), q, carsOnly)
+        );
+      }
+    }
 
     const filtered = sortModelsForDisplay(
       carsOnly ? filterCarModelsForListing(models) : models
@@ -66,6 +99,15 @@ export async function GET(req: NextRequest) {
   if (q) {
     const lower = q.toLowerCase();
     result = result.filter((m) => m.name.toLowerCase().includes(lower));
+  }
+
+  if (result.length === 0) {
+    const slug = await resolveBrandSlug(brandId);
+    if (slug) {
+      return NextResponse.json(
+        buildMemoryModelsResponse(memoryBrandIdFromSlug(slug), q, carsOnly)
+      );
+    }
   }
 
   return NextResponse.json(stripModelGenerations(result));

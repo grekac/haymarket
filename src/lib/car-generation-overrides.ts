@@ -1,4 +1,5 @@
 import { PLACEHOLDER_IMAGE, normalizeModelMatchKey } from "./car-catalog-utils";
+import { POPULAR_GENERATION_OVERRIDES } from "./car-generation-overrides-popular";
 
 type SeedGeneration = {
   code: string;
@@ -8,7 +9,7 @@ type SeedGeneration = {
   imageUrl: string;
 };
 
-type OverrideDef = {
+export type OverrideDef = {
   brand: string;
   modelName: string;
   modelKeys: string[];
@@ -17,6 +18,7 @@ type OverrideDef = {
 
 /** Поколения как на Авито: короткая подпись + точные годы */
 const OVERRIDES: OverrideDef[] = [
+  ...POPULAR_GENERATION_OVERRIDES,
   {
     brand: "Mercedes-Benz",
     modelName: "CLS",

@@ -7,9 +7,62 @@ import {
   getMemoryGenerations,
   getMemoryModel,
   isMemoryCarId,
+  memoryModelIdFromSlugs,
 } from "@/lib/car-catalog-fallback";
+import type { RawGeneration } from "@/lib/car-generation-groups";
 
 export const runtime = "nodejs";
+
+function sanitizeRawGenerations(gens: RawGeneration[]): RawGeneration[] {
+  const hasReal = gens.some((g) => g.code && g.code !== "ALL");
+  let list = hasReal ? gens.filter((g) => g.code !== "ALL") : gens;
+
+  const seen = new Set<string>();
+  list = list.filter((g) => {
+    const key = g.code.trim().toUpperCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return list;
+}
+
+function enrichGenerationPhoto(
+  gen: RawGeneration,
+  brandSlug: string,
+  modelSlug: string
+) {
+  if (isRealCarPhoto(gen.imageUrl)) return gen;
+  const cached = lookupGenerationImage(brandSlug, modelSlug, gen.code);
+  if (cached) return { ...gen, imageUrl: cached };
+  return gen;
+}
+
+function enrichMemoryGenerations(
+  modelId: string,
+  brandSlug: string,
+  modelSlug: string
+) {
+  const generations = sanitizeRawGenerations(getMemoryGenerations(modelId)).map((gen) =>
+    enrichGenerationPhoto(gen, brandSlug, modelSlug)
+  );
+
+  const grouped = groupGenerationsForDisplay(generations, brandSlug, modelSlug);
+  grouped.sort(
+    (a, b) =>
+      b.yearFrom - a.yearFrom || (b.yearTo ?? 9999) - (a.yearTo ?? 9999)
+  );
+
+  return grouped.map((group) => {
+    if (isRealCarPhoto(group.imageUrl)) return group;
+    for (const variant of group.variants) {
+      const cached = lookupGenerationImage(brandSlug, modelSlug, variant.code);
+      if (cached) return { ...group, imageUrl: cached };
+    }
+    return group;
+  });
+}
 
 export async function GET(req: NextRequest) {
   const modelId = req.nextUrl.searchParams.get("modelId");
@@ -23,16 +76,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Model not found" }, { status: 404 });
     }
 
-    const generations = getMemoryGenerations(modelId).map((gen) => {
-      if (isRealCarPhoto(gen.imageUrl)) return gen;
-      const cached = lookupGenerationImage(model.brandSlug, model.slug, gen.code);
-      if (cached) return { ...gen, imageUrl: cached };
-      return gen;
-    });
-
-    const grouped = groupGenerationsForDisplay(generations, model.brandSlug, model.slug);
-    grouped.sort((a, b) => b.yearFrom - a.yearFrom || (b.yearTo ?? 9999) - (a.yearTo ?? 9999));
-    return NextResponse.json(grouped);
+    return NextResponse.json(
+      enrichMemoryGenerations(modelId, model.brandSlug, model.slug)
+    );
   }
 
   const model = await prisma.carModel.findUnique({
@@ -58,18 +104,37 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  const enriched = generations.map((gen) => {
-    if (isRealCarPhoto(gen.imageUrl)) return gen;
-    const cached = lookupGenerationImage(model.brand.slug, model.slug, gen.code);
-    if (cached) return { ...gen, imageUrl: cached };
-    if (gen.imageUrl?.includes("car-logos-dataset")) {
-      return { ...gen, imageUrl: "__pending__" };
+  if (generations.length === 0) {
+    const memModelId = memoryModelIdFromSlugs(model.brand.slug, model.slug);
+    const memGens = getMemoryGenerations(memModelId);
+    if (memGens.length > 0) {
+      return NextResponse.json(
+        enrichMemoryGenerations(memModelId, model.brand.slug, model.slug)
+      );
     }
-    return gen;
-  });
+  }
+
+  const enriched = sanitizeRawGenerations(generations).map((gen) =>
+    enrichGenerationPhoto(gen, model.brand.slug, model.slug)
+  );
 
   const grouped = groupGenerationsForDisplay(enriched, model.brand.slug, model.slug);
-  grouped.sort((a, b) => b.yearFrom - a.yearFrom || (b.yearTo ?? 9999) - (a.yearTo ?? 9999));
+  grouped.sort(
+    (a, b) =>
+      b.yearFrom - a.yearFrom || (b.yearTo ?? 9999) - (a.yearTo ?? 9999)
+  );
 
-  return NextResponse.json(grouped);
+  const withPhotos = grouped.map((group) => {
+    if (isRealCarPhoto(group.imageUrl)) return group;
+    for (const variant of group.variants) {
+      const cached = lookupGenerationImage(model.brand.slug, model.slug, variant.code);
+      if (cached) return { ...group, imageUrl: cached };
+    }
+    if (group.imageUrl?.includes("car-logos-dataset")) {
+      return { ...group, imageUrl: "__pending__" };
+    }
+    return group;
+  });
+
+  return NextResponse.json(withPhotos);
 }

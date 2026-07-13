@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { POPULAR_BRAND_SLUGS } from "@/lib/car-logos";
-import { getMemoryBrands } from "@/lib/car-catalog-fallback";
+import { getMemoryBrands, shouldUseMemoryCarCatalog } from "@/lib/car-catalog-fallback";
 
 export const runtime = "nodejs";
 
@@ -10,6 +10,19 @@ export async function GET(req: NextRequest) {
   const popular = req.nextUrl.searchParams.get("popular") === "1";
   const all = req.nextUrl.searchParams.get("all") === "1";
   const limit = Math.min(Number(req.nextUrl.searchParams.get("limit") ?? "0") || 0, 5000);
+
+  if (await shouldUseMemoryCarCatalog()) {
+    if (all) {
+      return NextResponse.json(getMemoryBrands({ all: true }));
+    }
+    if (q) {
+      return NextResponse.json(getMemoryBrands({ q, limit: limit || 300 }));
+    }
+    if (popular) {
+      return NextResponse.json(getMemoryBrands({ popular: true }));
+    }
+    return NextResponse.json(getMemoryBrands({ limit: limit || 500 }));
+  }
 
   const select = { id: true, name: true, slug: true, logoUrl: true } as const;
 
