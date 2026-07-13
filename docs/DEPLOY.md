@@ -42,6 +42,24 @@ docker compose -f docker/docker-compose.yml up --build
 
 Требует `output: "standalone"` в `next.config.ts` (уже включено).
 
+## Опционально: Stripe (продвижение)
+
+1. [dashboard.stripe.com](https://dashboard.stripe.com) → API keys
+2. Render Environment:
+   - `STRIPE_SECRET_KEY` — sk_live_... или sk_test_...
+   - `STRIPE_WEBHOOK_SECRET` — из Webhooks → endpoint `https://ваш-домен/api/webhooks/stripe`, событие `checkout.session.completed`
+3. Supabase SQL: `prisma/stage8-migration.sql`
+
+Без Stripe — продвижение работает в demo-режиме (как раньше).
+
+## Опционально: Sentry
+
+```
+SENTRY_DSN=https://...@sentry.io/...
+```
+
+Ошибки API и `onRequestError` отправляются в Sentry.
+
 ## Опционально: Upstash Redis
 
 Для rate limit на нескольких инстансах Render:
@@ -57,7 +75,7 @@ UPSTASH_REDIS_REST_TOKEN=
 
 - UptimeRobot / Better Stack → `https://ваш-домен/api/ready`
 - Логи Render → JSON в `src/lib/logger.ts`
-- Sentry: добавьте `SENTRY_DSN` (интеграция — следующий шаг)
+- Sentry: `SENTRY_DSN` (см. выше)
 
 ## Локали
 

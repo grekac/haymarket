@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getPromotionPackage } from "@/lib/promotion";
 import {
-  extendPromotionUntil,
-  getPromotionPackage,
-  isListingPromoted,
-} from "@/lib/promotion";
+  createPromotionCheckout,
+  isStripeEnabled,
+  processDemoPromotion,
+} from "@/lib/stripe-promotion";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -13,7 +14,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const { id } = await params;
   const body = await request.json().catch(() => ({}));
-  const packageId = body.package ?? "basic";
+  const packageId = (body.package ?? "basic") as string;
+  const locale = typeof body.locale === "string" ? body.locale : "hy";
   const pkg = getPromotionPackage(packageId);
 
   if (!pkg) return NextResponse.json({ error: "Неверный пакет" }, { status: 400 });
@@ -27,31 +29,26 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "Можно продвигать только активные объявления" }, { status: 400 });
   }
 
-  const currentUntil =
-    isListingPromoted(listing) && listing.promotedUntil ? new Date(listing.promotedUntil) : null;
-  const until = extendPromotionUntil(currentUntil, pkg.days);
+  if (isStripeEnabled()) {
+    const { checkoutUrl, orderId } = await createPromotionCheckout({
+      listingId: id,
+      userId: session.id,
+      packageId: pkg.id,
+      locale,
+    });
+    return NextResponse.json({ checkoutUrl, orderId, mode: "stripe" });
+  }
 
-  const [updated, order] = await prisma.$transaction([
-    prisma.listing.update({
-      where: { id },
-      data: { isPromoted: true, promotedUntil: until },
-    }),
-    prisma.promotionOrder.create({
-      data: {
-        listingId: id,
-        userId: session.id,
-        package: pkg.id,
-        days: pkg.days,
-        amount: pkg.amount,
-        status: "PAID",
-        provider: process.env.STRIPE_SECRET_KEY ? "stripe" : "demo",
-      },
-    }),
-  ]);
+  const result = await processDemoPromotion({
+    listingId: id,
+    userId: session.id,
+    packageId: pkg.id,
+  });
 
   return NextResponse.json({
-    listing: updated,
-    order: { id: order.id, amount: order.amount, package: order.package, days: order.days },
-    promotedUntil: until,
+    listing: result.listing,
+    order: { id: result.order.id, amount: result.order.amount, package: result.order.package, days: result.order.days },
+    promotedUntil: result.promotedUntil,
+    mode: "demo",
   });
 }

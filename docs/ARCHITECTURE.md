@@ -225,6 +225,19 @@ npm run dev                   # Локальная разработка
 
 ---
 
+## Этап 8 — Payments & Monitoring
+
+| Компонент | Реализация |
+|-----------|------------|
+| Stripe | Checkout для продвижения, webhook `/api/webhooks/stripe` |
+| Demo fallback | Без `STRIPE_SECRET_KEY` — мгновенная demo-оплата |
+| Sentry | Опционально через `SENTRY_DSN` |
+| Уведомления | In-app после успешной оплаты |
+
+SQL: `prisma/stage8-migration.sql` (`stripeSessionId`, статус `PENDING`)
+
+---
+
 ## Переменные окружения
 
 ```env

@@ -11,11 +11,19 @@ import { MyListingActions } from "@/components/listings/MyListingActions";
 import { SellerAnalytics } from "@/components/seller/SellerAnalytics";
 import { VerifyPhoneCard } from "@/components/profile/VerifyPhoneCard";
 
+import { PromotionCheckoutBanner } from "@/components/listings/PromotionCheckoutBanner";
+
 import { BackButton } from "@/components/ui/BackButton";
 
-export default async function ProfilePage() {
+export default async function ProfilePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ promoted?: string }>;
+}) {
   const user = await getSession();
   if (!user) redirect("/login?next=/profile");
+
+  const { promoted } = await searchParams;
 
   const listings = await prisma.listing.findMany({
     where: { userId: user.id },
@@ -30,6 +38,7 @@ export default async function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 md:py-10">
       <BackButton href="/" />
+      <PromotionCheckoutBanner status={promoted} />
       <VerifyPhoneCard isVerified={dbUser?.isVerified ?? false} />
       <Card className="p-6 mb-6 shadow-[var(--shadow-md)]">
         <div className="w-16 h-16 rounded-full bg-[var(--accent)] text-[var(--accent-fg)] flex items-center justify-center text-2xl font-bold mb-4">

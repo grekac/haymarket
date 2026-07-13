@@ -326,22 +326,24 @@ model Report {
 }
 
 model PromotionOrder {
-  id        String        @id @default(cuid())
-  listingId String
-  listing   Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User          @relation(fields: [userId], references: [id])
-  package   String
-  days      Int
-  amount    Int
-  currency  String        @default("AMD")
-  status    PaymentStatus @default(PAID)
-  provider  String        @default("demo")
-  createdAt DateTime      @default(now())
+  id              String        @id @default(cuid())
+  listingId       String
+  listing         Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  package         String
+  days            Int
+  amount          Int
+  currency        String        @default("AMD")
+  status          PaymentStatus @default(PENDING)
+  provider        String        @default("demo")
+  stripeSessionId String?       @unique
+  createdAt       DateTime      @default(now())
 
   @@index([userId])
   @@index([listingId])
   @@index([createdAt])
+  @@index([status])
 }
 
 model ListingViewDaily {

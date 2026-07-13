@@ -1,8 +1,8 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { Zap } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { formatPrice } from "@/lib/utils";
 import { isListingPromoted, promotionDaysLeft, PROMOTION_PACKAGES } from "@/lib/promotion";
@@ -19,6 +19,7 @@ export function PromoteButton({
   promotedUntil?: string | Date | null;
 }) {
   const t = useTranslations("promote");
+  const locale = useLocale();
   const active = isListingPromoted({ isPromoted: !!isPromoted, promotedUntil: promotedUntil ?? null });
   const [promoted, setPromoted] = useState(active);
   const [until, setUntil] = useState(promotedUntil ? new Date(promotedUntil) : null);
@@ -31,10 +32,16 @@ export function PromoteButton({
       const res = await fetch(`/api/listings/${listingId}/promote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ package: packageId }),
+        body: JSON.stringify({ package: packageId, locale }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+        return;
+      }
+
       setPromoted(true);
       setUntil(new Date(data.promotedUntil));
       setOpen(false);
@@ -84,7 +91,7 @@ export function PromoteButton({
                 </button>
               ))}
             </div>
-            <p className="text-[11px] text-[var(--text-muted)] mb-3">{t("demoPayment")}</p>
+            <p className="text-[11px] text-[var(--text-muted)] mb-3">{t("paymentNote")}</p>
             <Button variant="ghost" className="w-full" onClick={() => setOpen(false)}>
               {t("cancel")}
             </Button>
