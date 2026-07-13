@@ -1,5 +1,4 @@
 import { CategoryCard } from "./CategoryCard";
-import { categoryLink } from "@/lib/categories";
 
 export type HubCategoryItem = {
   id: string;
@@ -8,6 +7,7 @@ export type HubCategoryItem = {
   icon: string;
   count?: number;
   subtitle?: string;
+  href?: string;
 };
 
 /** Сетка подкатегорий — orb на мобильном, плитки на десктопе */
@@ -21,7 +21,7 @@ export function CategoryHubGrid({ items }: { items: HubCategoryItem[] }) {
             slug={item.slug}
             name={item.name}
             icon={item.icon}
-            href={categoryLink(item.slug)}
+            href={item.href}
             variant="orb"
             className="min-w-[80px]"
           />
@@ -35,7 +35,7 @@ export function CategoryHubGrid({ items }: { items: HubCategoryItem[] }) {
             slug={item.slug}
             name={item.name}
             icon={item.icon}
-            href={categoryLink(item.slug)}
+            href={item.href}
             subtitle={item.subtitle}
             variant="tile"
           />
@@ -50,7 +50,7 @@ export function CategoryHubGrid({ items }: { items: HubCategoryItem[] }) {
             name={item.name}
             icon={item.icon}
             count={item.count}
-            href={categoryLink(item.slug)}
+            href={item.href}
             subtitle={item.subtitle}
             variant="row"
             showCount

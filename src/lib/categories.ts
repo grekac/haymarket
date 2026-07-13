@@ -78,6 +78,7 @@ export function getTransportSubcategories(
     icon: carsHub.icon,
     count: carsHub._count?.listings ?? 0,
     subtitle: AUTO_HUB_ITEMS.cars,
+    href: "/search?category=cars",
   };
 
   const rest = children.map((c) => ({
