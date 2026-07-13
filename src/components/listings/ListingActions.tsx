@@ -5,17 +5,21 @@ import { Heart, Phone } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { AskSellerButton } from "@/components/chat/AskSellerButton";
+import { CompareButton } from "@/components/listings/CompareButton";
+import type { CompareItem } from "@/lib/compare";
 
 export function ListingActions({
   listingId,
   isFavorited: initial,
   phone,
   compact,
+  compare,
 }: {
   listingId: string;
   isFavorited: boolean;
   phone?: string;
   compact?: boolean;
+  compare?: CompareItem;
 }) {
   const [fav, setFav] = useState(initial);
   const [showPhone, setShowPhone] = useState(false);
@@ -79,6 +83,7 @@ export function ListingActions({
       >
         <Heart className={cn("w-4 h-4", fav && "fill-current")} /> Избранное
       </button>
+      {compare && <CompareButton listing={compare} />}
       <AskSellerButton listingId={listingId} />
     </div>
   );

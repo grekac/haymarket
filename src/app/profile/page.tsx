@@ -8,6 +8,7 @@ import { LogoutButton } from "@/components/layout/LogoutButton";
 import { VerifiedBadge, RatingStars } from "@/components/trust/VerifiedBadge";
 import { PromoteButton } from "@/components/listings/PromoteButton";
 import { MyListingActions } from "@/components/listings/MyListingActions";
+import { VerifyPhoneCard } from "@/components/profile/VerifyPhoneCard";
 
 import { BackButton } from "@/components/ui/BackButton";
 
@@ -28,6 +29,7 @@ export default async function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 md:py-10">
       <BackButton href="/" />
+      <VerifyPhoneCard isVerified={dbUser?.isVerified ?? false} />
       <Card className="p-6 mb-6 shadow-[var(--shadow-md)]">
         <div className="w-16 h-16 rounded-full bg-[var(--accent)] text-[var(--accent-fg)] flex items-center justify-center text-2xl font-bold mb-4">
           {user.name.charAt(0)}
@@ -60,7 +62,12 @@ export default async function ProfilePage() {
             <div key={l.id} className="flex items-center gap-4 p-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]">
               <Link href={`/listing/${l.id}`} className="flex-1 hover:opacity-80">
                 <p className="font-medium">{l.title}</p>
-                <p className="text-xs text-[var(--text-muted)]">{l.category.name} · {l.status}</p>
+                <p className="text-xs text-[var(--text-muted)]">
+                  {l.category.name} ·{" "}
+                  <span className={l.status === "PENDING" ? "text-amber-600 font-medium" : ""}>
+                    {l.status === "PENDING" ? "На модерации" : l.status}
+                  </span>
+                </p>
               </Link>
               {l.status === "ACTIVE" && <PromoteButton listingId={l.id} isPromoted={l.isPromoted} />}
               <MyListingActions listingId={l.id} />

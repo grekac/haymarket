@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { CompareBar } from "@/components/listings/CompareBar";
 import { Footer } from "@/components/Footer";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Header />
             <main className="flex-1 pb-24">{children}</main>
             <Footer />
+            <CompareBar />
             <MobileNav />
           </div>
         </ThemeProvider>

@@ -51,7 +51,7 @@ export default async function SearchPage({ searchParams }: { searchParams: SP })
         subtitle={`${result.total} результатов`}
       />
       <div className="mb-4 flex flex-wrap gap-2 items-center">
-        <div className="flex-1 min-w-[200px]"><PremiumSearchBar /></div>
+        <div className="flex-1 min-w-[200px]"><PremiumSearchBar defaultValue={p.q ?? ""} /></div>
         <SavedSearchButton filters={{ q: p.q, category: p.category, city: p.city }} />
       </div>
 

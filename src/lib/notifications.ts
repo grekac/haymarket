@@ -10,6 +10,19 @@ export async function notifyUser(opts: {
   return prisma.notification.create({ data: opts });
 }
 
+export async function notifyAdmins(opts: {
+  type: string;
+  title: string;
+  body: string;
+  link?: string;
+}) {
+  const admins = await prisma.user.findMany({
+    where: { role: "ADMIN", isBlocked: false },
+    select: { id: true },
+  });
+  await Promise.all(admins.map((a) => notifyUser({ userId: a.id, ...opts })));
+}
+
 export async function notifySavedSearchesForListing(listingId: string) {
   const listing = await prisma.listing.findUnique({
     where: { id: listingId },

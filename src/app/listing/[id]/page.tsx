@@ -82,6 +82,15 @@ export default async function ListingPage({ params }: { params: Params }) {
     }),
   ]);
 
+  const compareItem = {
+    id: listing.id,
+    title: listing.title,
+    price: listing.price,
+    currency: listing.currency,
+    image: listing.images[0]?.url,
+    category: listing.category.name,
+  };
+
   return (
     <div className="pb-28 md:pb-12">
       <TrackRecentlyViewed
@@ -169,7 +178,7 @@ export default async function ListingPage({ params }: { params: Params }) {
             </Card>
 
             <div className="lg:hidden">
-              <ListingActions listingId={id} isFavorited={isFavorited} phone={listing.user.phone} />
+              <ListingActions listingId={id} isFavorited={isFavorited} phone={listing.user.phone} compare={compareItem} />
             </div>
 
             <Card className="p-5 md:p-6">
@@ -234,7 +243,7 @@ export default async function ListingPage({ params }: { params: Params }) {
                 memberSince={sellerMeta?.createdAt ?? listing.createdAt}
                 listingId={id}
               />
-              <ListingActions listingId={id} isFavorited={isFavorited} phone={listing.user.phone} />
+              <ListingActions listingId={id} isFavorited={isFavorited} phone={listing.user.phone} compare={compareItem} />
             </div>
           </div>
         </div>
@@ -255,6 +264,7 @@ export default async function ListingPage({ params }: { params: Params }) {
         listingId={id}
         isFavorited={isFavorited}
         phone={listing.user.phone}
+        compare={compareItem}
         compact
       />
     </div>

@@ -75,6 +75,15 @@ model User {
   updatedAt    DateTime       @updatedAt
 }
 
+model PhoneVerification {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
 model Listing {
   id          String            @id @default(cuid())
   title       String
@@ -287,5 +296,6 @@ model Report {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   reason    String
+  resolvedAt DateTime?
   createdAt DateTime @default(now())
 }

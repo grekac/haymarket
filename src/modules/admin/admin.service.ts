@@ -40,7 +40,19 @@ export class AdminService {
   }
 
   async updateListingStatus(id: string, status: "ACTIVE" | "REJECTED" | "ARCHIVED") {
-    return prisma.listing.update({ where: { id }, data: { status } });
+    const listing = await prisma.listing.update({ where: { id }, data: { status } });
+    if (status === "ACTIVE") {
+      const { notifySavedSearchesForListing, notifyUser } = await import("@/lib/notifications");
+      notifySavedSearchesForListing(id).catch(() => {});
+      notifyUser({
+        userId: listing.userId,
+        type: "listing_approved",
+        title: "Объявление опубликовано",
+        body: listing.title,
+        link: `/listing/${id}`,
+      }).catch(() => {});
+    }
+    return listing;
   }
 
   async deleteListing(id: string) {
@@ -154,6 +166,51 @@ export class AdminService {
     const children = await prisma.category.count({ where: { parentId: id } });
     if (children > 0) throw new Error("У категории есть подкатегории");
     return prisma.category.delete({ where: { id } });
+  }
+
+  async getReports() {
+    return prisma.report.findMany({
+      where: { resolvedAt: null },
+      orderBy: { createdAt: "desc" },
+      include: {
+        listing: { select: { id: true, title: true, status: true } },
+        user: { select: { id: true, name: true, phone: true } },
+      },
+      take: 50,
+    });
+  }
+
+  async resolveReport(id: string) {
+    return prisma.report.update({
+      where: { id },
+      data: { resolvedAt: new Date() },
+    });
+  }
+
+  async getListingsPendingFirst(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [all, total, pendingCount] = await Promise.all([
+      prisma.listing.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 200,
+        include: {
+          category: true,
+          images: { take: 1 },
+          user: { select: { id: true, name: true, phone: true } },
+        },
+      }),
+      prisma.listing.count(),
+      prisma.listing.count({ where: { status: "PENDING" } }),
+    ]);
+
+    const sorted = [...all].sort((a, b) => {
+      if (a.status === "PENDING" && b.status !== "PENDING") return -1;
+      if (b.status === "PENDING" && a.status !== "PENDING") return 1;
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    });
+
+    const items = sorted.slice(skip, skip + limit);
+    return { items, total, pendingCount, page, totalPages: Math.ceil(total / limit) };
   }
 }
 

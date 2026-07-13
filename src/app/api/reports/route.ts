@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { notifyAdmins } from "@/lib/notifications";
 
 export async function POST(request: NextRequest) {
   const session = await getSession();
@@ -17,6 +18,15 @@ export async function POST(request: NextRequest) {
       userId: session.id,
       reason: String(reason).trim().slice(0, 500),
     },
+    include: { listing: { select: { title: true } } },
   });
+
+  notifyAdmins({
+    type: "report",
+    title: "Новая жалоба",
+    body: `${report.listing.title}: ${report.reason.slice(0, 80)}`,
+    link: "/admin",
+  }).catch(() => {});
+
   return NextResponse.json(report, { status: 201 });
 }

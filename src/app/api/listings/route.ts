@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { cityCoords } from "@/lib/geo";
-import { notifySavedSearchesForListing } from "@/lib/notifications";
+import { notifySavedSearchesForListing, notifyAdmins } from "@/lib/notifications";
 import { listingService } from "@/modules/listings/listing.service";
 
 export async function POST(request: NextRequest) {
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
         latitude: latitude ?? coords.lat,
         longitude: longitude ?? coords.lng,
         userId: session.id,
-        status: "ACTIVE",
+        status: "PENDING",
         images: images?.length
           ? { create: images.map((url: string, i: number) => ({ url, sortOrder: i })) }
           : undefined,
@@ -54,7 +54,18 @@ export async function POST(request: NextRequest) {
     });
 
     notifySavedSearchesForListing(listing.id).catch(console.error);
-    return NextResponse.json(listing, { status: 201 });
+    if (listing.status === "PENDING") {
+      notifyAdmins({
+        type: "moderation",
+        title: "Новое объявление на модерации",
+        body: listing.title,
+        link: "/admin",
+      }).catch(console.error);
+    }
+    return NextResponse.json(
+      { ...listing, message: "Объявление отправлено на модерацию" },
+      { status: 201 }
+    );
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: "Ошибка создания" }, { status: 500 });
