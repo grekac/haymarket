@@ -3,11 +3,36 @@ import { prisma } from "@/lib/prisma";
 import { lookupGenerationImage } from "@/lib/car-generation-images";
 import { groupGenerationsForDisplay } from "@/lib/car-generation-groups";
 import { isRealCarPhoto } from "@/lib/car-images";
+import {
+  getMemoryGenerations,
+  getMemoryModel,
+  isMemoryCarId,
+} from "@/lib/car-catalog-fallback";
+
+export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   const modelId = req.nextUrl.searchParams.get("modelId");
   if (!modelId) {
     return NextResponse.json({ error: "modelId required" }, { status: 400 });
+  }
+
+  if (isMemoryCarId(modelId)) {
+    const model = getMemoryModel(modelId);
+    if (!model) {
+      return NextResponse.json({ error: "Model not found" }, { status: 404 });
+    }
+
+    const generations = getMemoryGenerations(modelId).map((gen) => {
+      if (isRealCarPhoto(gen.imageUrl)) return gen;
+      const cached = lookupGenerationImage(model.brandSlug, model.slug, gen.code);
+      if (cached) return { ...gen, imageUrl: cached };
+      return gen;
+    });
+
+    const grouped = groupGenerationsForDisplay(generations, model.brandSlug, model.slug);
+    grouped.sort((a, b) => b.yearFrom - a.yearFrom || (b.yearTo ?? 9999) - (a.yearTo ?? 9999));
+    return NextResponse.json(grouped);
   }
 
   const model = await prisma.carModel.findUnique({
@@ -44,8 +69,6 @@ export async function GET(req: NextRequest) {
   });
 
   const grouped = groupGenerationsForDisplay(enriched, model.brand.slug, model.slug);
-
-  // Как на Авито: сначала новые поколения
   grouped.sort((a, b) => b.yearFrom - a.yearFrom || (b.yearTo ?? 9999) - (a.yearTo ?? 9999));
 
   return NextResponse.json(grouped);

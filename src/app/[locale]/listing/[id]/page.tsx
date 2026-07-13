@@ -24,6 +24,8 @@ import { ReportButton } from "@/components/trust/ReportButton";
 import { SectionHeader } from "@/components/home/SectionHeader";
 import { TrackRecentlyViewed } from "@/components/listings/TrackRecentlyViewed";
 import { PriceEstimatePanel } from "@/components/listings/PriceEstimatePanel";
+import { categoryLabel } from "@/lib/category-label";
+import { fixMojibake } from "@/lib/text-encoding";
 import { estimateCarPriceForListing } from "@/lib/ai-price-estimate";
 
 type Params = Promise<{ locale: string; id: string }>;
@@ -77,6 +79,7 @@ export default async function ListingPage({ params }: { params: Params }) {
   const { id, locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("listing");
+  const tCat = await getTranslations("categories");
   const listing = await listingService.getById(id);
   if (!listing) notFound();
 
@@ -94,13 +97,15 @@ export default async function ListingPage({ params }: { params: Params }) {
     }),
   ]);
 
+  const categoryName = categoryLabel(listing.category.slug, listing.category.name, tCat);
+
   const compareItem = {
     id: listing.id,
-    title: listing.title,
+    title: fixMojibake(listing.title),
     price: listing.price,
     currency: listing.currency,
     image: listing.images[0]?.url,
-    category: listing.category.name,
+    category: categoryName,
   };
 
   const liveEstimate =
@@ -158,7 +163,7 @@ export default async function ListingPage({ params }: { params: Params }) {
                     </p>
                   </div>
                   <span className="px-3 py-1.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-semibold">
-                    {listing.category.name}
+                    {categoryName}
                   </span>
                 </div>
 

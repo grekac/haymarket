@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { formatPrice, formatDate, cn } from "@/lib/utils";
+import { fixMojibake } from "@/lib/text-encoding";
 import { isListingPromoted } from "@/lib/promotion";
 
 type ListingData = {
@@ -27,6 +28,7 @@ type Props = {
 
 export function ListingCard({ listing, className, variant = "default" }: Props) {
   const image = listing.images[0]?.url;
+  const categoryName = fixMojibake(listing.category.name);
   const top = isListingPromoted({
     isPromoted: !!listing.isPromoted,
     promotedUntil: listing.promotedUntil ?? null,
@@ -41,7 +43,7 @@ export function ListingCard({ listing, className, variant = "default" }: Props) 
               <Image src={image} alt="" fill unoptimized className="object-cover" sizes="100px" />
             ) : (
               <div className="flex items-center justify-center h-full text-[10px] text-[var(--text-muted)] p-2 text-center">
-                {listing.category.name}
+                {categoryName}
               </div>
             )}
           </div>
@@ -77,7 +79,7 @@ export function ListingCard({ listing, className, variant = "default" }: Props) 
               />
             ) : (
               <div className="flex items-center justify-center h-full text-xs text-[var(--text-muted)]">
-                {listing.category.name}
+                {categoryName}
               </div>
             )}
             {top && (
@@ -115,7 +117,7 @@ export function ListingCard({ listing, className, variant = "default" }: Props) 
             />
           ) : (
             <div className="flex items-center justify-center h-full text-xs text-[var(--text-muted)]">
-              {listing.category.name}
+              {categoryName}
             </div>
           )}
           {top && (

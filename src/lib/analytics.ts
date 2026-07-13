@@ -20,17 +20,24 @@ export async function expirePromotions() {
 export async function recordListingView(listingId: string) {
   const today = startOfDay();
 
-  await prisma.$transaction([
-    prisma.listing.update({
+  try {
+    await prisma.$transaction([
+      prisma.listing.update({
+        where: { id: listingId },
+        data: { views: { increment: 1 } },
+      }),
+      prisma.listingViewDaily.upsert({
+        where: { listingId_date: { listingId, date: today } },
+        create: { listingId, date: today, views: 1 },
+        update: { views: { increment: 1 } },
+      }),
+    ]);
+  } catch {
+    await prisma.listing.update({
       where: { id: listingId },
       data: { views: { increment: 1 } },
-    }),
-    prisma.listingViewDaily.upsert({
-      where: { listingId_date: { listingId, date: today } },
-      create: { listingId, date: today, views: 1 },
-      update: { views: { increment: 1 } },
-    }),
-  ]);
+    });
+  }
 }
 
 export async function getSellerStats(userId: string) {

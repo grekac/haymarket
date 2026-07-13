@@ -9,6 +9,7 @@ import { CategoryShowcase } from "@/components/listings/CategoryShowcase";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { Plus } from "lucide-react";
 import { RecentlyViewed } from "@/components/listings/RecentlyViewed";
+import { categoryLabel } from "@/lib/category-label";
 import { getHomeCategories } from "@/lib/categories";
 import { getSiteUrl } from "@/lib/site-url";
 import { setRequestLocale } from "next-intl/server";
@@ -22,6 +23,7 @@ export default async function HomePage({ params }: Props) {
   setRequestLocale(locale);
 
   const t = await getTranslations("home");
+  const tCat = await getTranslations("categories");
   const session = await getSession();
 
   let categories: Awaited<ReturnType<typeof getHomeCategories>> = [];
@@ -40,6 +42,11 @@ export default async function HomePage({ params }: Props) {
   } catch (error) {
     console.error("[homepage] database error:", error);
   }
+
+  const displayCategories = categories.map((cat) => ({
+    ...cat,
+    name: categoryLabel(cat.slug, cat.name, tCat),
+  }));
 
   const greeting = session
     ? t("greetingUser", { name: session.name.split(" ")[0] })
@@ -104,7 +111,7 @@ export default async function HomePage({ params }: Props) {
 
       <section className="px-4 mb-8 max-w-6xl mx-auto animate-fade-up animate-delay-2">
         <SectionHeader title={t("categories")} href="/categories" />
-        <CategoryShowcase categories={categories} orb />
+        <CategoryShowcase categories={displayCategories} orb />
       </section>
 
       <section className="px-4 mb-10 max-w-6xl mx-auto animate-fade-up animate-delay-3">

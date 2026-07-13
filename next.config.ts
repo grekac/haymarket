@@ -7,6 +7,7 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  serverExternalPackages: ["auto-parts-db", "@meterapp/vehicle-db"],
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: false },
   images: {

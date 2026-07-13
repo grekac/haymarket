@@ -5,6 +5,9 @@ import {
   sortModelsForDisplay,
   stripModelGenerations,
 } from "@/lib/car-model-filters";
+import { getMemoryModels, isMemoryCarId } from "@/lib/car-catalog-fallback";
+
+export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   const brandId = req.nextUrl.searchParams.get("brandId");
@@ -14,6 +17,17 @@ export async function GET(req: NextRequest) {
 
   if (!brandId) {
     return NextResponse.json({ error: "brandId required" }, { status: 400 });
+  }
+
+  if (isMemoryCarId(brandId)) {
+    const models = getMemoryModels(brandId, q || undefined).map((m) => ({
+      ...m,
+      generations: [{ code: "ALL" }],
+    }));
+    const filtered = sortModelsForDisplay(
+      carsOnly ? filterCarModelsForListing(models) : models
+    );
+    return NextResponse.json(stripModelGenerations(filtered));
   }
 
   const select = {

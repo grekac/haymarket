@@ -1,10 +1,12 @@
-import { prisma } from "@/lib/prisma";
+import { getTranslations } from "next-intl/server";
 import { CategoryCard } from "@/components/listings/CategoryCard";
 import { BackButton } from "@/components/ui/BackButton";
 import { SectionHeader } from "@/components/home/SectionHeader";
 import { getHomeCategories } from "@/lib/categories";
+import { categoryLabel } from "@/lib/category-label";
 
 export default async function CategoriesPage() {
+  const t = await getTranslations("categories");
   let categories: Awaited<ReturnType<typeof getHomeCategories>> = [];
   try {
     categories = await getHomeCategories();
@@ -22,7 +24,7 @@ export default async function CategoriesPage() {
           <CategoryCard
             key={cat.id}
             slug={cat.slug}
-            name={cat.name}
+            name={categoryLabel(cat.slug, cat.name, t)}
             icon={cat.icon}
             count={cat._count.listings}
             childCount={cat._count.children}
