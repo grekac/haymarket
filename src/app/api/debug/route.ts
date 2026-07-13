@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { databaseUrlHint, isDirectSupabaseHost } from "@/lib/database-url";
 
-/** Диагностика: почему нет объявлений на главной */
+/** Диагностика — только development */
 export async function GET() {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
   const dbUrl = process.env.DATABASE_URL ?? "";
 
   if (!dbUrl) {

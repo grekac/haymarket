@@ -4,6 +4,7 @@ import { adminService } from "@/modules/admin/admin.service";
 import { Card } from "@/components/ui/Card";
 import { AdminListings } from "@/components/admin/AdminListings";
 import { AdminUsers } from "@/components/admin/AdminUsers";
+import { AdminCategories } from "@/components/admin/AdminCategories";
 
 export default async function AdminPage() {
   const user = await getSession();
@@ -30,6 +31,7 @@ export default async function AdminPage() {
       </div>
 
       <AdminListings />
+      <AdminCategories />
       <div className="mt-10"><AdminUsers /></div>
     </div>
   );

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { LogoutButton } from "@/components/layout/LogoutButton";
 import { VerifiedBadge, RatingStars } from "@/components/trust/VerifiedBadge";
 import { PromoteButton } from "@/components/listings/PromoteButton";
+import { MyListingActions } from "@/components/listings/MyListingActions";
 
 import { BackButton } from "@/components/ui/BackButton";
 
@@ -62,6 +63,7 @@ export default async function ProfilePage() {
                 <p className="text-xs text-[var(--text-muted)]">{l.category.name} · {l.status}</p>
               </Link>
               {l.status === "ACTIVE" && <PromoteButton listingId={l.id} isPromoted={l.isPromoted} />}
+              <MyListingActions listingId={l.id} />
             </div>
           ))}
         </div>

@@ -186,6 +186,49 @@ export class ListingService {
   async getSimilar(categoryId: string, excludeId: string) {
     return this.repo.findSimilar(categoryId, excludeId);
   }
+
+  async update(
+    id: string,
+    userId: string,
+    data: {
+      title?: string;
+      description?: string;
+      price?: number;
+      city?: string;
+      district?: string;
+      condition?: string;
+    },
+    isAdmin = false
+  ) {
+    const listing = await prisma.listing.findUnique({ where: { id } });
+    if (!listing) throw new Error("Объявление не найдено");
+    if (!isAdmin && listing.userId !== userId) throw new Error("Нет доступа");
+
+    return prisma.listing.update({
+      where: { id },
+      data: {
+        ...(data.title !== undefined ? { title: data.title.trim() } : {}),
+        ...(data.description !== undefined ? { description: data.description.trim() } : {}),
+        ...(data.price !== undefined ? { price: Number(data.price) } : {}),
+        ...(data.city !== undefined ? { city: data.city } : {}),
+        ...(data.district !== undefined ? { district: data.district || null } : {}),
+        ...(data.condition !== undefined ? { condition: data.condition } : {}),
+      },
+      include: {
+        category: true,
+        images: { orderBy: { sortOrder: "asc" } },
+        user: { select: { id: true, name: true, phone: true } },
+      },
+    });
+  }
+
+  async delete(id: string, userId: string, isAdmin = false) {
+    const listing = await prisma.listing.findUnique({ where: { id } });
+    if (!listing) throw new Error("Объявление не найдено");
+    if (!isAdmin && listing.userId !== userId) throw new Error("Нет доступа");
+    await prisma.listing.delete({ where: { id } });
+    return { ok: true };
+  }
 }
 
 export const listingService = new ListingService();

@@ -10,6 +10,8 @@ import { SavedSearchButton } from "@/components/search/SavedSearchButton";
 
 import { BackButton } from "@/components/ui/BackButton";
 
+export const revalidate = 60;
+
 type SP = Promise<Record<string, string | undefined>>;
 
 export default async function SearchPage({ searchParams }: { searchParams: SP }) {

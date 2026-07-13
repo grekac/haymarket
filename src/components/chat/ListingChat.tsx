@@ -104,7 +104,15 @@ export function ListingChat({ conversationId }: { conversationId: string }) {
     const socket = io(socketUrl, { transports: ["websocket", "polling"] });
     socketRef.current = socket;
 
-    socket.on("connect", () => socket.emit("join", conversationId));
+    socket.on("connect", () => {
+      fetch("/api/auth/socket-token")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data?.token) socket.emit("join", { conversationId, token: data.token });
+        })
+        .catch(() => {});
+    });
+
     socket.on("message", (msg: Message) => {
       addMessage(msg);
       autoTranslate(msg);
@@ -112,22 +120,7 @@ export function ListingChat({ conversationId }: { conversationId: string }) {
     socket.on("typing", () => setTyping(true));
     socket.on("stop_typing", () => setTyping(false));
 
-    const poll = setInterval(() => {
-      fetch(`/api/conversations/${conversationId}/messages`)
-        .then((r) => r.json())
-        .then((list: Message[]) => {
-          list.forEach((m) => {
-            if (!seenIds.current.has(m.id)) {
-              addMessage(m);
-              autoTranslate(m);
-            }
-          });
-        })
-        .catch(() => {});
-    }, 8000);
-
     return () => {
-      clearInterval(poll);
       socket.emit("leave", conversationId);
       socket.disconnect();
     };

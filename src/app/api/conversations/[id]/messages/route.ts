@@ -23,7 +23,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const socketUrl = getSocketUrl();
     await fetch(`${socketUrl}/emit`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(process.env.INTERNAL_SOCKET_SECRET
+          ? { "x-socket-secret": process.env.INTERNAL_SOCKET_SECRET }
+          : {}),
+      },
       body: JSON.stringify({ conversationId: id, message }),
     }).catch(() => {});
   } catch {}

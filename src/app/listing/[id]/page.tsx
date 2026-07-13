@@ -1,11 +1,14 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MapPin, Eye, Clock, Store } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { listingService } from "@/modules/listings/listing.service";
+import { listingRepository } from "@/modules/listings/listing.repository";
 import { getSession } from "@/lib/auth";
 import { favoriteService } from "@/modules/favorites/favorite.service";
 import { formatPrice, formatDate, formatNumber } from "@/lib/utils";
+import { getSiteUrl } from "@/lib/site-url";
 import { BackButton } from "@/components/ui/BackButton";
 import { ListingSpecs } from "@/components/listings/ListingSpecs";
 import { ImageGallery } from "@/components/listings/ImageGallery";
@@ -16,14 +19,49 @@ import { Card } from "@/components/ui/Card";
 import { SafetyBanner } from "@/components/trust/SafetyBanner";
 import { ReportButton } from "@/components/trust/ReportButton";
 import { SectionHeader } from "@/components/home/SectionHeader";
+import { TrackRecentlyViewed } from "@/components/listings/TrackRecentlyViewed";
 
 type Params = Promise<{ id: string }>;
+
+export const revalidate = 60;
 
 const CONDITION_LABELS: Record<string, string> = {
   new: "Новое",
   used: "Б/у",
   refurbished: "Восстановленное",
 };
+
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { id } = await params;
+  const listing = await listingRepository.findById(id);
+  if (!listing || listing.status !== "ACTIVE") {
+    return { title: "Объявление — HayMarket" };
+  }
+
+  const image = listing.images[0]?.url;
+  const description = listing.description.slice(0, 160);
+  const title = `${listing.title} — ${formatPrice(listing.price, listing.currency)}`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: listing.title,
+      description,
+      url: getSiteUrl(`/listing/${id}`),
+      siteName: "HayMarket",
+      images: image ? [{ url: image, width: 800, height: 600, alt: listing.title }] : [],
+      locale: "ru_RU",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: listing.title,
+      description,
+      images: image ? [image] : [],
+    },
+  };
+}
 
 export default async function ListingPage({ params }: { params: Params }) {
   const { id } = await params;
@@ -46,6 +84,32 @@ export default async function ListingPage({ params }: { params: Params }) {
 
   return (
     <div className="pb-28 md:pb-12">
+      <TrackRecentlyViewed
+        id={listing.id}
+        title={listing.title}
+        price={listing.price}
+        currency={listing.currency}
+        image={listing.images[0]?.url}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: listing.title,
+            description: listing.description,
+            image: listing.images.map((i) => i.url),
+            offers: {
+              "@type": "Offer",
+              price: listing.price,
+              priceCurrency: listing.currency,
+              availability: "https://schema.org/InStock",
+              url: getSiteUrl(`/listing/${id}`),
+            },
+          }),
+        }}
+      />
       <div className="max-w-6xl mx-auto px-4 pt-4 md:pt-6">
         <BackButton href="/search" sticky className="md:mb-2" />
       </div>

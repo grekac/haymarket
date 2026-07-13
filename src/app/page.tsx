@@ -7,7 +7,10 @@ import { SectionHeader } from "@/components/home/SectionHeader";
 import { CategoryShowcase } from "@/components/listings/CategoryShowcase";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { Plus } from "lucide-react";
+import { RecentlyViewed } from "@/components/listings/RecentlyViewed";
 import { getHomeCategories } from "@/lib/categories";
+
+export const revalidate = 60;
 
 export default async function HomePage() {
   const session = await getSession();
@@ -76,6 +79,9 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* Recently viewed */}
+      <RecentlyViewed />
+
       {/* Round category icons */}
       <section className="px-4 mb-8 max-w-6xl mx-auto animate-fade-up animate-delay-2">
         <SectionHeader title="Категории" href="/categories" />
@@ -91,13 +97,7 @@ export default async function HomePage() {
         />
         {feed.newListings.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--text-muted)]">
-            <p className="mb-2">Объявлений пока нет на сайте.</p>
-            <p>
-              Проверка:{" "}
-              <Link href="/api/debug" className="text-[var(--accent)] underline">
-                /api/debug
-              </Link>
-            </p>
+            <p>Объявлений пока нет на сайте.</p>
           </div>
         ) : (
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none snap-x snap-mandatory md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-4 md:overflow-visible md:mx-0 md:px-0">

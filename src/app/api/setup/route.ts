@@ -30,7 +30,9 @@ export async function GET(req: NextRequest) {
       steps,
       seed,
       status,
-      login: { phone: "+374 91 123456", password: "123456" },
+      ...(process.env.NODE_ENV !== "production"
+        ? { login: { phone: "+374 91 123456", password: "123456" } }
+        : {}),
     });
   } catch (error) {
     return NextResponse.json(

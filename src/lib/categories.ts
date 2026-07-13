@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 /** Категории-хабы: по клику открывают подкатегории, а не поиск */
@@ -27,13 +28,18 @@ export const AUTO_HUB_ITEMS: Record<string, string> = {
 };
 
 export async function getHomeCategories() {
-  return prisma.category.findMany({
-    where: { isActive: true, showOnHome: true },
-    orderBy: { sortOrder: "asc" },
-    include: {
-      _count: { select: { listings: true, children: true } },
-    },
-  });
+  return unstable_cache(
+    () =>
+      prisma.category.findMany({
+        where: { isActive: true, showOnHome: true },
+        orderBy: { sortOrder: "asc" },
+        include: {
+          _count: { select: { listings: true, children: true } },
+        },
+      }),
+    ["home-categories"],
+    { revalidate: 300 }
+  )();
 }
 
 export async function getCategoryHub(slug: string) {

@@ -21,6 +21,8 @@ services:
         generateValue: true
       - key: SETUP_SECRET
         generateValue: true
+      - key: INTERNAL_SOCKET_SECRET
+        generateValue: true
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
@@ -49,3 +51,13 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: AUTH_SECRET
+        fromService:
+          name: haymarket
+          type: web
+          envVarKey: AUTH_SECRET
+      - key: INTERNAL_SOCKET_SECRET
+        fromService:
+          name: haymarket
+          type: web
+          envVarKey: INTERNAL_SOCKET_SECRET

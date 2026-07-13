@@ -86,6 +86,75 @@ export class AdminService {
       },
     });
   }
+
+  async getCategories() {
+    return prisma.category.findMany({
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      include: {
+        parent: { select: { id: true, name: true, slug: true } },
+        _count: { select: { listings: true, children: true } },
+      },
+    });
+  }
+
+  async createCategory(data: {
+    name: string;
+    slug: string;
+    icon: string;
+    imageUrl?: string;
+    sortOrder?: number;
+    parentId?: string | null;
+    showOnHome?: boolean;
+  }) {
+    return prisma.category.create({
+      data: {
+        name: data.name.trim(),
+        slug: data.slug.trim().toLowerCase(),
+        icon: data.icon.trim(),
+        imageUrl: data.imageUrl || null,
+        sortOrder: data.sortOrder ?? 0,
+        parentId: data.parentId || null,
+        showOnHome: data.showOnHome ?? true,
+        isActive: true,
+      },
+    });
+  }
+
+  async updateCategory(
+    id: string,
+    data: Partial<{
+      name: string;
+      slug: string;
+      icon: string;
+      imageUrl: string | null;
+      sortOrder: number;
+      parentId: string | null;
+      showOnHome: boolean;
+      isActive: boolean;
+    }>
+  ) {
+    return prisma.category.update({
+      where: { id },
+      data: {
+        ...(data.name !== undefined ? { name: data.name.trim() } : {}),
+        ...(data.slug !== undefined ? { slug: data.slug.trim().toLowerCase() } : {}),
+        ...(data.icon !== undefined ? { icon: data.icon.trim() } : {}),
+        ...(data.imageUrl !== undefined ? { imageUrl: data.imageUrl } : {}),
+        ...(data.sortOrder !== undefined ? { sortOrder: data.sortOrder } : {}),
+        ...(data.parentId !== undefined ? { parentId: data.parentId } : {}),
+        ...(data.showOnHome !== undefined ? { showOnHome: data.showOnHome } : {}),
+        ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
+      },
+    });
+  }
+
+  async deleteCategory(id: string) {
+    const count = await prisma.listing.count({ where: { categoryId: id } });
+    if (count > 0) throw new Error("В категории есть объявления");
+    const children = await prisma.category.count({ where: { parentId: id } });
+    if (children > 0) throw new Error("У категории есть подкатегории");
+    return prisma.category.delete({ where: { id } });
+  }
 }
 
 export const adminService = new AdminService();

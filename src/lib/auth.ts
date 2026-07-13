@@ -2,10 +2,8 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { getJwtSecret } from "@/lib/jwt-secret";
 
-const SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET || "haymarket-fallback-secret"
-);
 const COOKIE_NAME = "session";
 const EXPIRY = "30d";
 
@@ -29,12 +27,12 @@ export async function createToken(user: SessionUser) {
   return new SignJWT({ user })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime(EXPIRY)
-    .sign(SECRET);
+    .sign(getJwtSecret());
 }
 
 export async function verifyToken(token: string): Promise<SessionUser | null> {
   try {
-    const { payload } = await jwtVerify(token, SECRET);
+    const { payload } = await jwtVerify(token, getJwtSecret());
     return (payload.user as SessionUser) ?? null;
   } catch {
     return null;
