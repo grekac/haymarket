@@ -1,6 +1,9 @@
 import { buildCarCatalogFromPackage } from "@/lib/car-catalog-builder";
-import { FEATURED_BRAND_SLUGS, filterAllowedBrands } from "@/lib/car-allowed-brands";
-import { prisma } from "@/lib/prisma";
+import {
+  ALLOWED_CAR_BRANDS,
+  FEATURED_BRAND_SLUGS,
+} from "@/lib/car-allowed-brands";
+import { carLogoUrl } from "@/lib/car-catalog-utils";
 import { lookupGenerationImage } from "@/lib/car-generation-images";
 import { isRealCarPhoto } from "@/lib/car-images";
 
@@ -61,14 +64,9 @@ function generationImageUrl(
   return cached ?? fallback;
 }
 
-let dbCatalogUsable: boolean | null = null;
-
-/** True when DB has no models — selector should use in-memory package catalog. */
+/** Всегда используем курируемый каталог (как Авито), а не сырой Prisma. */
 export async function shouldUseMemoryCarCatalog(): Promise<boolean> {
-  if (dbCatalogUsable !== null) return !dbCatalogUsable;
-  const modelCount = await prisma.carModel.count();
-  dbCatalogUsable = modelCount > 0;
-  return !dbCatalogUsable;
+  return true;
 }
 
 function ensureCatalog() {
@@ -110,6 +108,19 @@ function ensureCatalog() {
       }
       modelsByBrandId.set(id, models);
     }
+
+    for (const allowed of ALLOWED_CAR_BRANDS) {
+      const id = brandId(allowed.slug);
+      if (!brandById.has(id)) {
+        brandById.set(id, {
+          id,
+          name: allowed.name,
+          slug: allowed.slug,
+          logoUrl: carLogoUrl(allowed.slug),
+        });
+        modelsByBrandId.set(id, []);
+      }
+    }
   } catch (error) {
     console.error("[car-catalog-fallback] Failed to build catalog:", error);
   }
@@ -128,7 +139,16 @@ export function getMemoryBrands(opts: {
   all?: boolean;
 }): MemBrand[] {
   ensureCatalog();
-  let brands = filterAllowedBrands([...brandById.values()]);
+  let brands = ALLOWED_CAR_BRANDS.map((allowed) => {
+    const id = brandId(allowed.slug);
+    const fromCatalog = brandById.get(id);
+    return {
+      id,
+      name: fromCatalog?.name ?? allowed.name,
+      slug: allowed.slug,
+      logoUrl: fromCatalog?.logoUrl ?? carLogoUrl(allowed.slug),
+    };
+  });
 
   if (opts.popular) {
     const order = new Map(FEATURED_BRAND_SLUGS.map((s, i) => [s, i]));

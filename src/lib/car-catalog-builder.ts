@@ -11,7 +11,7 @@ import {
   formatGenerationTitle,
   normalizeModelMatchKey,
 } from "./car-catalog-utils";
-import { buildGenerationOverridesIndex } from "./car-generation-overrides";
+import { buildGenerationOverridesIndex, lookupGenerationOverride } from "./car-generation-overrides";
 import { isAllowedBrandName, isAllowedBrandSlug } from "./car-allowed-brands";
 
 function isValidGenerationCode(code: string, brandSlug?: string, modelSlug?: string): boolean {
@@ -19,6 +19,11 @@ function isValidGenerationCode(code: string, brandSlug?: string, modelSlug?: str
   if (/^\d+$/.test(code)) return false;
   const bmw3 = new Set(["3-er-reihe", "series-3", "3-series", "3er"]);
   if (brandSlug === "bmw" && modelSlug && bmw3.has(modelSlug) && /^F3[236]$/.test(code)) return false;
+  const bmw8 = new Set(["8-series", "series-8", "8er-reihe", "8er", "series8"]);
+  if (brandSlug === "bmw" && modelSlug && (bmw8.has(modelSlug) || modelSlug.includes("8-series"))) {
+    if (/^E\d{2}$/.test(code)) return false;
+    if (/^G1[46]$/.test(code)) return false;
+  }
   return true;
 }
 
@@ -194,12 +199,14 @@ export function buildCarCatalogFromPackage(): SeedBrand[] {
     const displayName = displayModelName(modelName, kind);
     const mKey = `${kind}|${normalizeModelKey(modelName)}`;
     const genKey = modelMatchKey(brandName, modelName);
+    const resolvedSlug = modelSlug ?? modelToSlug(modelName);
+    const overrideGens = lookupGenerationOverride(brandSlug, resolvedSlug, displayName);
     const generations = filterGenerations(
-      generationsIndex.get(genKey) ?? defaultGeneration(brandName, displayName),
+      overrideGens ?? generationsIndex.get(genKey) ?? defaultGeneration(brandName, displayName),
       brandSlug,
-      modelSlug ?? modelToSlug(modelName)
+      resolvedSlug
     );
-    const fromOverride = generationsIndex.has(genKey) && generations.some((g) => g.code !== "ALL");
+    const fromOverride = !!overrideGens && generations.some((g) => g.code !== "ALL");
 
     if (brand.models.has(mKey)) {
       const existing = brand.models.get(mKey)!;

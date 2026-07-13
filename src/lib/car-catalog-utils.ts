@@ -1,9 +1,4 @@
 const BRAND_SLUG_MAP: Record<string, string> = {
-  "ГАЗ": "gaz",
-  "МАЗ": "maz",
-  "УАЗ": "uaz",
-  "ВАЗ": "lada",
-  "ЗАЗ": "zaz",
   "Mercedes-Benz": "mercedes-benz",
   "Mercedes": "mercedes-benz",
   "BMW": "bmw",

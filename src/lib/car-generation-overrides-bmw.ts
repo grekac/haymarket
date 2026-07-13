@@ -97,7 +97,7 @@ export const BMW_GENERATION_OVERRIDES: OverrideDef[] = [
     brand: "BMW",
     brandSlug: "bmw",
     modelName: "8 Series",
-    modelKeys: ["series8", "8erreihe", "8er", "8"],
+    modelKeys: ["series8", "8erreihe", "8er"],
     modelSlugs: ["8-series", "series-8", "8er-reihe"],
     generations: [
       { code: "G15 FL", yearFrom: 2022, yearTo: null, label: "II (G15) рестайлинг" },

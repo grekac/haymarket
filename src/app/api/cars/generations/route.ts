@@ -40,6 +40,41 @@ function enrichGenerationPhoto(
   return gen;
 }
 
+function formatOverrideGenerations(
+  override: NonNullable<ReturnType<typeof lookupGenerationOverride>>,
+  modelId: string,
+  brandSlug: string,
+  modelSlug: string
+) {
+  return override
+    .map((g) => {
+      const id = `mem-gen-${brandSlug}-${modelSlug}-${g.code}`;
+      const enriched = enrichGenerationPhoto(
+        {
+          id,
+          code: g.code,
+          name: g.name,
+          yearFrom: g.yearFrom,
+          yearTo: g.yearTo,
+          imageUrl: g.imageUrl,
+          modelId,
+        },
+        brandSlug,
+        modelSlug
+      );
+      return {
+        ...enriched,
+        code: g.name,
+        name: g.name,
+        variants: [{ id, code: g.code, label: g.name }],
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.yearFrom - a.yearFrom || (b.yearTo ?? 9999) - (a.yearTo ?? 9999)
+    );
+}
+
 function enrichMemoryGenerations(
   modelId: string,
   brandSlug: string,
@@ -47,17 +82,11 @@ function enrichMemoryGenerations(
   modelName?: string
 ) {
   const override = lookupGenerationOverride(brandSlug, modelSlug, modelName);
-  const source = override
-    ? override.map((g, i) => ({
-        id: `mem-gen-${brandSlug}-${modelSlug}-${g.code}`,
-        code: g.code,
-        name: g.name,
-        yearFrom: g.yearFrom,
-        yearTo: g.yearTo,
-        imageUrl: g.imageUrl,
-        modelId,
-      }))
-    : sanitizeRawGenerations(getMemoryGenerations(modelId));
+  if (override) {
+    return formatOverrideGenerations(override, modelId, brandSlug, modelSlug);
+  }
+
+  const source = sanitizeRawGenerations(getMemoryGenerations(modelId));
 
   const generations = source.map((gen) =>
     enrichGenerationPhoto(gen, brandSlug, modelSlug)

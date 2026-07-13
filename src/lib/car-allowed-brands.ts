@@ -133,7 +133,7 @@ export function filterAllowedBrands<T extends { slug: string; name: string }>(br
 export const FEATURED_BRAND_SLUGS = [
   "toyota", "mercedes-benz", "bmw", "hyundai", "kia", "nissan", "honda", "lexus",
   "volkswagen", "audi", "ford", "chevrolet", "mazda", "mitsubishi", "subaru",
-  "renault", "peugeot", "opel", "skoda", "citroen", "lada", "uaz", "gaz",
+  "renault", "peugeot", "opel", "citroen", "lada", "uaz", "gaz",
   "geely", "chery", "haval", "byd", "tesla", "porsche", "land-rover", "jeep",
   "infiniti", "genesis", "volvo", "jaguar", "mini", "ssangyong", "daewoo",
   "dacia", "fiat", "cupra", "seat", "suzuki", "isuzu", "daihatsu", "ram",
