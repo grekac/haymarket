@@ -22,6 +22,9 @@
 | `prisma/stage3-migration.sql` | AI price min/max |
 | `prisma/stage4-migration.sql` | Чат: фото/видео/голос |
 | `prisma/stage6-migration.sql` | Продвижение, аналитика |
+| `prisma/stage8-migration.sql` | Stripe: stripeSessionId на PromotionOrder |
+| `prisma/stage9-migration.sql` | Поля категорий в админке (CategoryFieldSchema) |
+| `prisma/fix-encoding.sql` | Исправление кракозябр в названиях категорий (один раз) |
 
 Альтернатива для первого запуска: `/api/setup?key=ВАШ_SETUP_SECRET`
 
@@ -51,6 +54,14 @@ docker compose -f docker/docker-compose.yml up --build
 3. Supabase SQL: `prisma/stage8-migration.sql`
 
 Без Stripe — продвижение работает в demo-режиме (как раньше).
+
+## Опционально: рекламные баннеры на карточках
+
+```
+NEXT_PUBLIC_ADS_ENABLED=true
+```
+
+Без переменной баннеры скрыты.
 
 ## Опционально: Sentry
 

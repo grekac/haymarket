@@ -9,10 +9,12 @@ export function AskSellerButton({
   listingId,
   className,
   compact,
+  label,
 }: {
   listingId: string;
   className?: string;
   compact?: boolean;
+  label?: string;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -49,7 +51,7 @@ export function AskSellerButton({
         )}
       >
         <MessageCircle className="w-5 h-5" />
-        {loading ? "…" : "Написать"}
+        {loading ? "…" : (label ?? "Написать")}
       </button>
     );
   }
@@ -65,7 +67,7 @@ export function AskSellerButton({
       )}
     >
       <MessageCircle className="w-4 h-4" />
-      {loading ? "Открываем чат…" : "Написать продавцу"}
+      {loading ? "Открываем чат…" : (label ?? "Написать продавцу")}
     </button>
   );
 }

@@ -11,7 +11,8 @@ import { CategoryFieldsForm } from "@/components/listings/CategoryFieldsForm";
 import { CategoryIcon, CATEGORY_GRADIENT } from "@/components/listings/CategoryIcon";
 import { TransportSubPicker } from "@/components/listings/TransportSubPicker";
 import type { HubCategoryItem } from "@/components/listings/CategoryHubGrid";
-import { collectAttributesFromForm, hasCategoryFields } from "@/lib/category-fields";
+import { collectAttributesFromForm, hasCategoryFields, REAL_ESTATE_EXTRA_FIELDS } from "@/lib/category-fields";
+import { collectRealEstateExtrasFromForm, mergeRealEstateAttributes } from "@/lib/real-estate-extra";
 import { PriceEstimateInline } from "@/components/listings/PriceEstimatePanel";
 import { CITIES, CONDITIONS, TRANSMISSIONS, ENGINE_TYPES, DRIVE_TYPES, BODY_TYPES, PROPERTY_TYPES } from "@/lib/utils";
 
@@ -229,6 +230,9 @@ export function CreateListingForm({
         furniture: fd.get("furniture") === "on",
         parking: fd.get("parking") === "on",
       };
+      const reExtras = collectRealEstateExtrasFromForm(fd);
+      const merged = mergeRealEstateAttributes(null, reExtras);
+      if (merged) payload.attributes = merged;
     }
 
     if (cat && showAttributes) {
@@ -557,6 +561,35 @@ export function CreateListingForm({
             <label className="flex items-center gap-2">
               <input type="checkbox" name="parking" /> Парковка / гараж
             </label>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" name="re_airConditioning" /> Кондиционер
+            </label>
+          </div>
+          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[var(--border)]">
+            {REAL_ESTATE_EXTRA_FIELDS.filter((f) =>
+              ["livingArea", "kitchenArea", "buildingMaterial", "ceilingHeight", "commercialSubtype", "commercialPurpose", "landPurpose"].includes(f.key)
+            ).map((field) => (
+              <div key={field.key}>
+                <label className={label}>{field.label}</label>
+                {field.type === "select" ? (
+                  <select name={`re_${field.key}`} className={selectClass}>
+                    <option value="">—</option>
+                    {field.options?.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <Input
+                    name={`re_${field.key}`}
+                    type={field.type === "number" ? "number" : "text"}
+                    step={field.step}
+                    min={field.min}
+                  />
+                )}
+              </div>
+            ))}
           </div>
         </fieldset>
       )}

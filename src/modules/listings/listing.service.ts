@@ -193,6 +193,45 @@ export class ListingService {
     return this.repo.findSimilar(categoryId, excludeId);
   }
 
+  async getSimilarCars(
+    listing: { id: string; categoryId: string; carDetails: { brand: string; model: string; year: number; mileage: number } | null },
+    limit = 8
+  ) {
+    if (!listing.carDetails) {
+      return this.repo.findSimilar(listing.categoryId, listing.id, limit);
+    }
+    const { brand, model, year, mileage } = listing.carDetails;
+    return prisma.listing.findMany({
+      where: {
+        status: "ACTIVE",
+        id: { not: listing.id },
+        carDetails: {
+          brand,
+          model,
+          year: { gte: year - 2, lte: year + 2 },
+          mileage: { gte: Math.max(0, mileage - 50000), lte: mileage + 50000 },
+        },
+      },
+      orderBy: [{ isPromoted: "desc" }, { createdAt: "desc" }],
+      take: limit,
+      include: {
+        category: true,
+        images: { orderBy: { sortOrder: "asc" } },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            avatar: true,
+            isVerified: true,
+            ratingAvg: true,
+            ratingCount: true,
+          },
+        },
+      },
+    });
+  }
+
   async update(
     id: string,
     userId: string,
