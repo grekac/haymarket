@@ -11,6 +11,9 @@ export type CarListingExtras = {
   sellerType?: "private" | "dealer" | "salon";
   options?: string[];
   bodyPaint?: string[];
+  bodyDamage?: string[];
+  bodyDamaged?: boolean;
+  bodyConditionNote?: string;
   liquidityNote?: string;
 };
 
@@ -61,6 +64,10 @@ export function parseCarListingExtras(attributes: string | null | undefined): Ca
           : undefined,
       options: Array.isArray(car.options) ? car.options.map(String) : undefined,
       bodyPaint: Array.isArray(car.bodyPaint) ? car.bodyPaint.map(String) : undefined,
+      bodyDamage: Array.isArray(car.bodyDamage) ? car.bodyDamage.map(String) : undefined,
+      bodyDamaged: car.bodyDamaged === true,
+      bodyConditionNote:
+        typeof car.bodyConditionNote === "string" ? car.bodyConditionNote : undefined,
       liquidityNote: typeof car.liquidityNote === "string" ? car.liquidityNote : undefined,
     };
   } catch {
@@ -92,6 +99,26 @@ export function getOptionLabel(key: string) {
 
 export function getBodyPartLabel(key: string) {
   return BODY_PART_LABELS[key] ?? key;
+}
+
+export function getBodyConditionSummary(extras: CarListingExtras) {
+  const paintedCount = extras.bodyPaint?.length ?? 0;
+  const damagedCount = extras.bodyDamage?.length ?? 0;
+
+  let damageLabel = "Не битая";
+  if (extras.bodyDamaged === true) {
+    damageLabel = damagedCount > 0 ? `Битая (${damagedCount} эл.)` : "Битая";
+  }
+
+  let paintLabel = "Без окрашенных элементов";
+  if (paintedCount > 0) {
+    paintLabel = `Окрашено: ${paintedCount} эл.`;
+  }
+  if (damagedCount > 0 && extras.bodyDamaged !== true) {
+    damageLabel = `Повреждения: ${damagedCount} эл.`;
+  }
+
+  return { damageLabel, paintLabel };
 }
 
 export const SELLER_TYPE_LABELS: Record<string, string> = {

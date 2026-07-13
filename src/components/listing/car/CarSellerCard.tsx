@@ -1,13 +1,9 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Store, Bell } from "lucide-react";
+import { User } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { VerifiedBadge, RatingStars } from "@/components/trust/VerifiedBadge";
 import { formatNumber } from "@/lib/utils";
 import { SELLER_TYPE_LABELS } from "@/lib/car-listing-extra";
-import { cn } from "@/lib/utils";
 
 type Props = {
   sellerId: string;
@@ -30,20 +26,6 @@ export function CarSellerCard({
   sellerType = "private",
   listingId,
 }: Props) {
-  const [subscribed, setSubscribed] = useState(false);
-
-  useEffect(() => {
-    setSubscribed(localStorage.getItem(`haymarket_sub_${sellerId}`) === "1");
-  }, [sellerId]);
-
-  function toggleSubscribe() {
-    const key = `haymarket_sub_${sellerId}`;
-    const next = !subscribed;
-    setSubscribed(next);
-    if (next) localStorage.setItem(key, "1");
-    else localStorage.removeItem(key);
-  }
-
   const typeLabel = SELLER_TYPE_LABELS[sellerType] ?? SELLER_TYPE_LABELS.private;
 
   return (
@@ -65,28 +47,13 @@ export function CarSellerCard({
         </div>
       </div>
 
-      <div className="flex gap-2 mt-4">
-        <button
-          type="button"
-          onClick={toggleSubscribe}
-          className={cn(
-            "flex-1 h-11 rounded-xl font-semibold text-sm border transition-colors flex items-center justify-center gap-2",
-            subscribed
-              ? "bg-[var(--accent)]/10 border-[var(--accent)]/30 text-[var(--accent)]"
-              : "border-[var(--border)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)]"
-          )}
-        >
-          <Bell className="w-4 h-4" />
-          {subscribed ? "Подписаны" : "Подписаться"}
-        </button>
-        <Link
-          href={listingId ? `/seller/${sellerId}?from=${listingId}` : `/seller/${sellerId}`}
-          className="flex-1 h-11 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[var(--bg-hover)] transition-colors"
-        >
-          <Store className="w-4 h-4" />
-          Канал
-        </Link>
-      </div>
+      <Link
+        href={listingId ? `/seller/${sellerId}?from=${listingId}` : `/seller/${sellerId}`}
+        className="mt-4 w-full h-11 rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+      >
+        <User className="w-4 h-4" />
+        Посмотреть профиль
+      </Link>
     </Card>
   );
 }

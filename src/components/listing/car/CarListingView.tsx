@@ -11,8 +11,7 @@ import { fixMojibake } from "@/lib/text-encoding";
 import { CarPremiumGallery } from "./CarPremiumGallery";
 import { CarListingHeader, CarDescriptionBlock } from "./CarListingHeader";
 import { CarExclusivityBadge } from "./CarExclusivityBadge";
-import { CarSpecsTable } from "./CarSpecsTable";
-import { CarBodyDiagram } from "./CarBodyDiagram";
+import { CarSpecsTable, CarDamageBadge } from "./CarSpecsTable";
 import { CarPriceAnalysis } from "./CarPriceAnalysis";
 import { CarLocationBlock } from "./CarLocationBlock";
 import { CarOptionsChecklist } from "./CarOptionsChecklist";
@@ -66,6 +65,7 @@ export function CarListingView({
           <div className="space-y-5 min-w-0">
             <CarListingHeader title={title} chips={chips} />
             <CarPremiumGallery images={listing.images} />
+            <CarDamageBadge extras={extras} />
             <CarExclusivityBadge />
 
             <div className="lg:hidden">
@@ -92,7 +92,6 @@ export function CarListingView({
             />
 
             <CarSpecsTable car={car} extras={extras} conditionLabel={conditionLabel} />
-            <CarBodyDiagram paintedParts={extras.bodyPaint} />
             <CarOptionsChecklist options={extras.options} />
             <CarLocationBlock
               city={listing.city}
