@@ -62,6 +62,10 @@ io.on("connection", (socket) => {
     socket.to(`conv:${data.conversationId}`).emit("typing", data);
   });
 
+  socket.on("stop_typing", (data: { conversationId: string; userId: string }) => {
+    socket.to(`conv:${data.conversationId}`).emit("stop_typing", data);
+  });
+
   socket.on("disconnect", () => {});
 });
 

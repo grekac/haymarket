@@ -21,16 +21,40 @@ export async function uploadImage(
   buffer: Buffer,
   folder = "haymarket/listings"
 ): Promise<{ url: string; publicId: string }> {
+  return uploadMedia(buffer, { folder, resourceType: "image" });
+}
+
+export async function uploadMedia(
+  buffer: Buffer,
+  options: {
+    folder?: string;
+    resourceType: "image" | "video" | "raw";
+    mimeType?: string;
+  }
+): Promise<{ url: string; publicId: string; duration?: number }> {
   if (!configured) {
     throw new Error("Cloudinary не настроен. Добавьте ключи в .env");
   }
 
+  const folder = options.folder ?? "haymarket/chat";
+
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: "image", quality: "auto", fetch_format: "auto" },
+      {
+        folder,
+        resource_type: options.resourceType,
+        quality: options.resourceType === "image" ? "auto" : undefined,
+        fetch_format: options.resourceType === "image" ? "auto" : undefined,
+      },
       (err, result) => {
         if (err || !result) reject(err ?? new Error("Upload failed"));
-        else resolve({ url: result.secure_url, publicId: result.public_id });
+        else {
+          resolve({
+            url: result.secure_url,
+            publicId: result.public_id,
+            duration: result.duration ? Math.round(result.duration) : undefined,
+          });
+        }
       }
     );
     stream.end(buffer);

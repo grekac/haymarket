@@ -3,7 +3,7 @@
 import { useState, FormEvent, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Upload, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Upload, X, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { CarSelector, type CarSelection } from "@/components/cars/CarSelector";
@@ -12,6 +12,7 @@ import { CategoryIcon, CATEGORY_GRADIENT } from "@/components/listings/CategoryI
 import { TransportSubPicker } from "@/components/listings/TransportSubPicker";
 import type { HubCategoryItem } from "@/components/listings/CategoryHubGrid";
 import { collectAttributesFromForm, hasCategoryFields } from "@/lib/category-fields";
+import { PriceEstimateInline } from "@/components/listings/PriceEstimatePanel";
 import { CITIES, CONDITIONS, TRANSMISSIONS, ENGINE_TYPES, DRIVE_TYPES, BODY_TYPES, PROPERTY_TYPES } from "@/lib/utils";
 
 type Category = { id: string; name: string; slug: string; icon?: string };
@@ -65,8 +66,18 @@ export function CreateListingForm({
   const [categorySlug, setCategorySlug] = useState(initialCat?.slug ?? "");
   const [images, setImages] = useState<string[]>([]);
   const [carSelection, setCarSelection] = useState<CarSelection | null>(null);
+  const [aiEstimate, setAiEstimate] = useState<{
+    price: number;
+    priceMin: number;
+    priceMax: number;
+    reasoning: string;
+    comparablesCount: number;
+    source: string;
+  } | null>(null);
+  const [estimateLoading, setEstimateLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const priceRef = useRef<HTMLInputElement>(null);
 
   const selectedCategory = categories.find((c) => c.id === categoryId)
     ?? transportSubcategories.find((c) => c.id === categoryId);
@@ -112,6 +123,47 @@ export function CreateListingForm({
       const url = await uploadFile(file);
       setImages((prev) => [...prev, url]);
     }
+  }
+
+  async function runPriceEstimate() {
+    if (!carSelection || !formRef.current) return;
+    setEstimateLoading(true);
+    setAiEstimate(null);
+    try {
+      const fd = new FormData(formRef.current);
+      const res = await fetch("/api/ai/price-estimate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brand: carSelection.brand,
+          model: carSelection.model,
+          generation: carSelection.generation,
+          year: Number(fd.get("year")) || carSelection.yearTo || new Date().getFullYear(),
+          mileage: Number(fd.get("mileage")) || 0,
+          transmission: fd.get("transmission"),
+          engineType: fd.get("engineType"),
+          engineVolume: fd.get("engineVolume") ? Number(fd.get("engineVolume")) : null,
+          power: fd.get("power") ? Number(fd.get("power")) : null,
+          driveType: fd.get("driveType") || null,
+          bodyType: fd.get("bodyType") || null,
+          condition: fd.get("condition") || "used",
+          city: fd.get("city") || "Ереван",
+          listedPrice: fd.get("price") ? Number(fd.get("price")) : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Ошибка оценки");
+      setAiEstimate(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось оценить цену");
+    } finally {
+      setEstimateLoading(false);
+    }
+  }
+
+  function applyAiPrice() {
+    if (!aiEstimate || !priceRef.current) return;
+    priceRef.current.value = String(aiEstimate.price);
   }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -182,6 +234,12 @@ export function CreateListingForm({
     if (cat && showAttributes) {
       const attrs = collectAttributesFromForm(cat.slug, fd);
       if (attrs) payload.attributes = attrs;
+    }
+
+    if (aiEstimate && isCar) {
+      payload.aiPriceHint = aiEstimate.price;
+      payload.aiPriceMin = aiEstimate.priceMin;
+      payload.aiPriceMax = aiEstimate.priceMax;
     }
 
     try {
@@ -541,7 +599,7 @@ export function CreateListingForm({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={label}>Цена (֏) *</label>
-                  <Input name="price" type="number" required min={0} placeholder="0 = договорная" />
+                  <Input name="price" ref={priceRef} type="number" required min={0} placeholder="0 = договорная" />
                 </div>
                 <div>
                   <label className={label}>Состояние</label>
@@ -552,6 +610,28 @@ export function CreateListingForm({
                   </select>
                 </div>
               </div>
+
+              {isCar && carSelection && (
+                <div className="space-y-3">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={runPriceEstimate}
+                    disabled={estimateLoading}
+                    className="w-full"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {estimateLoading ? "Оцениваем..." : "Оценить цену AI"}
+                  </Button>
+                  {aiEstimate && (
+                    <PriceEstimateInline
+                      estimate={aiEstimate}
+                      onApply={applyAiPrice}
+                      loading={estimateLoading}
+                    />
+                  )}
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={label}>Город *</label>

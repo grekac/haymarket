@@ -1,0 +1,109 @@
+{
+  "meta": {
+    "title": "HayMarket — Объявления Армении",
+    "description": "Премиальный маркетплейс покупки и продажи в Армении"
+  },
+  "nav": {
+    "searchPlaceholder": "Поиск объявлений",
+    "messages": "Сообщения",
+    "login": "Войти",
+    "register": "Регистрация",
+    "post": "Подать",
+    "admin": "Админ",
+    "home": "Главная",
+    "favorites": "Избранное",
+    "chats": "Чаты",
+    "profile": "Профиль"
+  },
+  "footer": {
+    "tagline": "Маркетплейс объявлений Армении",
+    "cities": "Города",
+    "sections": "Разделы",
+    "categories": "Категории",
+    "search": "Поиск",
+    "post": "Подать"
+  },
+  "home": {
+    "country": "Армения",
+    "greeting": "HayMarket",
+    "greetingUser": "Привет, {name}",
+    "forYou": "Для вас",
+    "categories": "Категории",
+    "newListings": "Новые объявления",
+    "onPlatform": "{count} на платформе",
+    "noListings": "Объявлений пока нет на сайте.",
+    "popularNearby": "Популярные рядом",
+    "nearYerevan": "В Ереване и окрестностях",
+    "ctaTitle": "Подать объявление за 30 сек",
+    "ctaSubtitle": "AI напишет описание и подскажет цену"
+  },
+  "search": {
+    "title": "Поиск",
+    "allListings": "Все объявления",
+    "results": "{count} результатов",
+    "empty": "Ничего не найдено"
+  },
+  "listing": {
+    "condition": {
+      "new": "Новое",
+      "used": "Б/у",
+      "refurbished": "Восстановленное"
+    },
+    "views": "просмотров",
+    "description": "Описание",
+    "video": "Видео",
+    "similar": "Похожие",
+    "sellerChannel": "Канал продавца и отзывы",
+    "itemsForSale": "товаров в продаже"
+  },
+  "common": {
+    "negotiable": "Договорная",
+    "back": "Назад",
+    "justNow": "только что",
+    "minutesAgo": "{n} мин. назад",
+    "hoursAgo": "{n} ч. назад",
+    "daysAgo": "{n} дн. назад"
+  },
+  "categories": {
+    "cars": "Авто",
+    "real-estate": "Недвижимость",
+    "electronics": "Электроника",
+    "jobs": "Работа",
+    "services": "Услуги",
+    "home-furniture": "Дом и мебель",
+    "clothing": "Одежда",
+    "kids": "Детское",
+    "animals": "Животные",
+    "other": "Другое"
+  },
+  "analytics": {
+    "title": "Статистика",
+    "loading": "Загрузка…",
+    "totalViews": "Всего просмотров",
+    "views7d": "За 7 дней",
+    "favorites": "В избранном",
+    "messages": "Сообщения",
+    "viewsChart": "Просмотры за 7 дней",
+    "activeListings": "{count} активных",
+    "activePromotions": "{count} продвижений",
+    "spent": "Потрачено {amount}",
+    "byListing": "По объявлениям",
+    "viewsTotal": "просм.",
+    "views7dShort": "7 дн.",
+    "promoted": "ТОП"
+  },
+  "promote": {
+    "button": "Продвинуть",
+    "active": "ТОП · {days} дн.",
+    "modalTitle": "Продвижение объявления",
+    "modalSubtitle": "Объявление будет выше в поиске и на главной",
+    "demoPayment": "Demo-оплата — в продакшене подключите Stripe",
+    "cancel": "Отмена",
+    "error": "Ошибка",
+    "packages": {
+      "basic": { "name": "Базовый · 7 дней", "desc": "Выше в поиске" },
+      "standard": { "name": "Стандарт · 14 дней", "desc": "Дольше на виду" },
+      "premium": { "name": "Премиум · 30 дней", "desc": "Максимальный охват" }
+    }
+  }
+}

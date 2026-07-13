@@ -132,6 +132,35 @@ export class AdminService {
     });
   }
 
+  async reorderCategories(items: Array<{ id: string; sortOrder: number }>) {
+    await prisma.$transaction(
+      items.map((item) =>
+        prisma.category.update({
+          where: { id: item.id },
+          data: { sortOrder: item.sortOrder },
+        })
+      )
+    );
+  }
+
+  private async isDescendant(ancestorId: string, candidateId: string): Promise<boolean> {
+    let currentId: string | null = candidateId;
+    const seen = new Set<string>();
+
+    while (currentId) {
+      if (currentId === ancestorId) return true;
+      if (seen.has(currentId)) break;
+      seen.add(currentId);
+      const row: { parentId: string | null } | null = await prisma.category.findUnique({
+        where: { id: currentId },
+        select: { parentId: true },
+      });
+      currentId = row?.parentId ?? null;
+    }
+
+    return false;
+  }
+
   async updateCategory(
     id: string,
     data: Partial<{
@@ -145,6 +174,13 @@ export class AdminService {
       isActive: boolean;
     }>
   ) {
+    if (data.parentId !== undefined) {
+      if (data.parentId === id) throw new Error("Категория не может быть родителем самой себе");
+      if (data.parentId && (await this.isDescendant(id, data.parentId))) {
+        throw new Error("Нельзя выбрать подкатегорию в качестве родителя");
+      }
+    }
+
     return prisma.category.update({
       where: { id },
       data: {

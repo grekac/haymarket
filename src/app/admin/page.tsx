@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { AdminListings } from "@/components/admin/AdminListings";
 import { AdminUsers } from "@/components/admin/AdminUsers";
 import { AdminCategories } from "@/components/admin/AdminCategories";
+import { AdminAnalytics } from "@/components/admin/AdminAnalytics";
 import { AdminReports } from "@/components/admin/AdminReports";
 
 export default async function AdminPage() {
@@ -31,6 +32,7 @@ export default async function AdminPage() {
         ))}
       </div>
 
+      <AdminAnalytics />
       <AdminListings />
       <AdminReports />
       <AdminCategories />

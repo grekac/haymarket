@@ -1,6 +1,9 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 
-export function Footer() {
+export async function Footer() {
+  const t = await getTranslations("footer");
+
   return (
     <footer className="hidden md:block border-t border-[var(--border)] bg-[var(--bg-card)] mt-auto">
       <div className="max-w-6xl mx-auto px-4 py-12 md:py-14">
@@ -12,14 +15,12 @@ export function Footer() {
               </div>
               <span className="font-semibold">HayMarket</span>
             </div>
-            <p className="text-sm text-[var(--text-muted)] max-w-xs leading-relaxed">
-              Маркетплейс объявлений Армении
-            </p>
+            <p className="text-sm text-[var(--text-muted)] max-w-xs leading-relaxed">{t("tagline")}</p>
           </div>
 
           <div className="flex gap-16 text-sm">
             <div>
-              <p className="font-medium mb-3 text-[var(--text-secondary)]">Города</p>
+              <p className="font-medium mb-3 text-[var(--text-secondary)]">{t("cities")}</p>
               <div className="space-y-2 text-[var(--text-muted)]">
                 {["Ереван", "Гюмри", "Ванадзор"].map((city) => (
                   <Link
@@ -33,11 +34,17 @@ export function Footer() {
               </div>
             </div>
             <div>
-              <p className="font-medium mb-3 text-[var(--text-secondary)]">Разделы</p>
+              <p className="font-medium mb-3 text-[var(--text-secondary)]">{t("sections")}</p>
               <div className="space-y-2 text-[var(--text-muted)]">
-                <Link href="/categories" className="block hover:text-[var(--brand)] transition-colors">Категории</Link>
-                <Link href="/create" className="block hover:text-[var(--brand)] transition-colors">Подать</Link>
-                <Link href="/search" className="block hover:text-[var(--brand)] transition-colors">Поиск</Link>
+                <Link href="/categories" className="block hover:text-[var(--brand)] transition-colors">
+                  {t("categories")}
+                </Link>
+                <Link href="/create" className="block hover:text-[var(--brand)] transition-colors">
+                  {t("post")}
+                </Link>
+                <Link href="/search" className="block hover:text-[var(--brand)] transition-colors">
+                  {t("search")}
+                </Link>
               </div>
             </div>
           </div>

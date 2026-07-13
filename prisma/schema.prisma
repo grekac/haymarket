@@ -20,6 +20,13 @@ enum ListingStatus {
   ARCHIVED
 }
 
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  VOICE
+}
+
 enum PropertyType {
   APARTMENT
   HOUSE
@@ -30,6 +37,13 @@ enum PropertyType {
 enum DealType {
   SALE
   RENT
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
 }
 
 model Category {
@@ -71,6 +85,7 @@ model User {
   savedSearches   SavedSearch[]
   notifications   Notification[]
   reports         Report[]
+  promotionOrders PromotionOrder[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 }
@@ -102,6 +117,8 @@ model Listing {
   isPromoted  Boolean           @default(false)
   promotedUntil DateTime?
   aiPriceHint Int?
+  aiPriceMin  Int?
+  aiPriceMax  Int?
   attributes  String?
   categoryId  String
   category    Category          @relation(fields: [categoryId], references: [id])
@@ -114,6 +131,8 @@ model Listing {
   conversations Conversation[]
   reviews     Review[]
   reports     Report[]
+  promotionOrders PromotionOrder[]
+  viewDaily   ListingViewDaily[]
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 
@@ -242,7 +261,13 @@ model Message {
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   senderId       String
   sender         User         @relation(fields: [senderId], references: [id])
-  content        String
+  type           MessageType  @default(TEXT)
+  content        String       @default("")
+  mediaUrl       String?
+  mediaPublicId  String?
+  mimeType       String?
+  duration       Int?
+  thumbnailUrl   String?
   lang           String?
   readAt         DateTime?
   createdAt      DateTime     @default(now())
@@ -298,4 +323,35 @@ model Report {
   reason    String
   resolvedAt DateTime?
   createdAt DateTime @default(now())
+}
+
+model PromotionOrder {
+  id        String        @id @default(cuid())
+  listingId String
+  listing   Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id])
+  package   String
+  days      Int
+  amount    Int
+  currency  String        @default("AMD")
+  status    PaymentStatus @default(PAID)
+  provider  String        @default("demo")
+  createdAt DateTime      @default(now())
+
+  @@index([userId])
+  @@index([listingId])
+  @@index([createdAt])
+}
+
+model ListingViewDaily {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  views     Int      @default(0)
+
+  @@unique([listingId, date])
+  @@index([listingId])
+  @@index([date])
 }

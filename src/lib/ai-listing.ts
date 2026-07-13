@@ -1,3 +1,5 @@
+import { estimateCarPrice } from "@/lib/ai-price-estimate";
+
 type AssistInput = {
   categorySlug?: string;
   categoryName?: string;
@@ -7,6 +9,9 @@ type AssistInput = {
   carBrand?: string;
   carModel?: string;
   carYear?: number;
+  carMileage?: number;
+  carTransmission?: string;
+  carEngineType?: string;
   hint?: string;
 };
 
@@ -25,8 +30,6 @@ const PRICE_HINTS: Record<string, { min: number; max: number }> = {
 
 export async function assistListing(input: AssistInput) {
   const slug = input.categorySlug ?? "other";
-  const range = PRICE_HINTS[slug] ?? PRICE_HINTS.other;
-  const mid = Math.round((range.min + range.max) / 2);
   const city = input.city ?? "Ереван";
   const cond = input.condition === "new" ? "новое" : "б/у";
 
@@ -48,17 +51,41 @@ export async function assistListing(input: AssistInput) {
     description = `Продаётся ${cat.toLowerCase()} (${cond}) в ${city}. Актуальное объявление на HayMarket. Пишите в безопасный чат.`;
   }
 
-  const price = mid;
-  const priceMin = Math.round(range.min * 0.85);
-  const priceMax = Math.round(range.max * 1.1);
+  if (slug === "cars" && input.carBrand && input.carModel && input.carYear) {
+    const estimate = await estimateCarPrice({
+      brand: input.carBrand,
+      model: input.carModel,
+      year: input.carYear,
+      mileage: input.carMileage,
+      transmission: input.carTransmission,
+      engineType: input.carEngineType,
+      condition: input.condition,
+      city,
+    });
+
+    return {
+      title: title.slice(0, 120),
+      description: description.slice(0, 2000),
+      price: estimate.price,
+      priceMin: estimate.priceMin,
+      priceMax: estimate.priceMax,
+      reasoning: estimate.reasoning,
+      comparablesCount: estimate.comparablesCount,
+      categorySlug: slug,
+      source: estimate.source,
+    };
+  }
+
+  const range = PRICE_HINTS[slug] ?? PRICE_HINTS.other;
+  const mid = Math.round((range.min + range.max) / 2);
 
   return {
     title: title.slice(0, 120),
     description: description.slice(0, 2000),
-    price,
-    priceMin,
-    priceMax,
+    price: mid,
+    priceMin: Math.round(range.min * 0.85),
+    priceMax: Math.round(range.max * 1.1),
     categorySlug: slug,
-    source: "ai" as const,
+    source: "baseline" as const,
   };
 }

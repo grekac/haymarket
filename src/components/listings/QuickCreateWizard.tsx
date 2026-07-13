@@ -20,6 +20,9 @@ type AiResult = {
   price: number;
   priceMin: number;
   priceMax: number;
+  reasoning?: string;
+  comparablesCount?: number;
+  source?: string;
 };
 
 export function QuickCreateWizard({
@@ -80,7 +83,10 @@ export function QuickCreateWizard({
           imageCount: images.length,
           carBrand: carSelection?.brand,
           carModel: carSelection?.model,
-          carYear: carSelection?.yearTo,
+          carYear: carSelection?.yearTo ?? carSelection?.yearFrom,
+          carMileage: 0,
+          carTransmission: "Автомат",
+          carEngineType: "Бензин",
         }),
       });
       const data = await res.json();
@@ -110,6 +116,8 @@ export function QuickCreateWizard({
       condition,
       images,
       aiPriceHint: ai?.price ?? null,
+      aiPriceMin: ai?.priceMin ?? null,
+      aiPriceMax: ai?.priceMax ?? null,
     };
 
     if (isCarCategory && carSelection) {
@@ -281,9 +289,15 @@ export function QuickCreateWizard({
           <h2 className="font-semibold">Шаг 3: Проверьте и опубликуйте</h2>
 
           {ai && (
-            <p className="text-xs text-[var(--text-muted)] bg-[var(--bg-hover)] p-3 rounded-xl">
-              AI-цена: {formatPrice(ai.priceMin, "AMD")} — {formatPrice(ai.priceMax, "AMD")}
-            </p>
+            <div className="text-xs bg-[var(--bg-hover)] p-3 rounded-xl space-y-1">
+              <p className="font-medium text-[var(--text-secondary)]">
+                AI-оценка: {formatPrice(ai.price, "AMD")}
+              </p>
+              <p className="text-[var(--text-muted)]">
+                Диапазон: {formatPrice(ai.priceMin, "AMD")} — {formatPrice(ai.priceMax, "AMD")}
+              </p>
+              {ai.reasoning && <p className="text-[var(--text-muted)]">{ai.reasoning}</p>}
+            </div>
           )}
 
           <div><label className={label}>Название</label><Input value={title} onChange={(e) => setTitle(e.target.value)} required /></div>

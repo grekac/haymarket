@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       title, description, price, categoryId, city, district, address,
-      condition, images, carDetails, realEstate, attributes, videoUrl, aiPriceHint,
+      condition, images, carDetails, realEstate, attributes, videoUrl, aiPriceHint, aiPriceMin, aiPriceMax,
       latitude, longitude,
     } = body;
 
@@ -34,6 +34,8 @@ export async function POST(request: NextRequest) {
         condition: condition || "used",
         videoUrl: videoUrl || null,
         aiPriceHint: aiPriceHint ? Number(aiPriceHint) : null,
+        aiPriceMin: aiPriceMin ? Number(aiPriceMin) : null,
+        aiPriceMax: aiPriceMax ? Number(aiPriceMax) : null,
         latitude: latitude ?? coords.lat,
         longitude: longitude ?? coords.lng,
         userId: session.id,

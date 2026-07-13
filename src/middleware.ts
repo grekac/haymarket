@@ -1,6 +1,10 @@
+import createMiddleware from "next-intl/middleware";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyTokenEdge } from "@/lib/auth-edge";
+import { routing } from "@/i18n/routing";
+
+const intlMiddleware = createMiddleware(routing);
 
 const rateMap = new Map<string, { count: number; reset: number }>();
 
@@ -30,17 +34,32 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  if (pathname.startsWith("/api/ai/")) {
+    if (!rateLimit(`ai:${ip}`, 15, 60_000)) {
+      return NextResponse.json({ error: "Слишком много запросов" }, { status: 429 });
+    }
+  }
+
   if (pathname.startsWith("/admin")) {
     const token = request.cookies.get("session")?.value;
     const user = token ? await verifyTokenEdge(token) : null;
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/hy", request.url));
     }
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  if (
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname.includes(".")
+  ) {
+    return NextResponse.next();
+  }
+
+  return intlMiddleware(request);
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/debug", "/api/auth/:path*"],
+  matcher: ["/((?!api|_next|.*\\..*).*)"],
 };

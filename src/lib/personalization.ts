@@ -133,16 +133,24 @@ export async function getPersonalizedHome(userId?: string) {
   }
 
   if (userListings[0]) {
-    const views = userListings[0].views;
-    const todayViews = Math.min(views, Math.max(3, Math.round(views * 0.15)));
-    insights.push({
-      id: "views",
-      type: "views",
-      title: `У вашего объявления ${todayViews} просмотров`,
-      subtitle: userListings[0].title.slice(0, 40),
-      href: `/listing/${userListings[0].id}`,
-      accent: "emerald",
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayRow = await prisma.listingViewDaily.findUnique({
+      where: {
+        listingId_date: { listingId: userListings[0].id, date: today },
+      },
     });
+    const todayViews = todayRow?.views ?? 0;
+    if (todayViews > 0) {
+      insights.push({
+        id: "views",
+        type: "views",
+        title: `У вашего объявления ${todayViews} просмотров`,
+        subtitle: userListings[0].title.slice(0, 40),
+        href: `/listing/${userListings[0].id}`,
+        accent: "emerald",
+      });
+    }
   }
 
   const newToday = nearbyListings.filter((l) => l.createdAt >= today).length;

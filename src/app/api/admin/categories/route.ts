@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
+import { invalidateCategoryCache } from "@/lib/category-cache";
 import { adminService } from "@/modules/admin/admin.service";
 
 async function requireAdmin() {
@@ -24,6 +25,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const category = await adminService.createCategory(body);
+    invalidateCategoryCache();
     return NextResponse.json(category, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Ошибка";

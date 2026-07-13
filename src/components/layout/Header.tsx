@@ -1,16 +1,18 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { getSession } from "@/lib/auth";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { NotificationBell } from "./NotificationBell";
+import { LocaleSwitcher } from "./LocaleSwitcher";
 import { Search, MessageCircle } from "lucide-react";
 
 export async function Header() {
   const user = await getSession();
+  const t = await getTranslations("nav");
 
   return (
     <>
-      {/* Mobile — тонкая glass-шапка */}
       <header className="sticky top-0 z-40 glass border-b border-[var(--border)]/60 md:hidden">
         <div className="px-4 flex items-center justify-between h-12">
           <Link href="/" className="flex items-center gap-2">
@@ -20,6 +22,7 @@ export async function Header() {
             <span className="text-[15px] font-semibold tracking-tight">HayMarket</span>
           </Link>
           <div className="flex items-center gap-0.5">
+            <LocaleSwitcher />
             {user && (
               <Link href="/messages" className="p-2 rounded-full hover:bg-[var(--bg-hover)] transition-colors">
                 <MessageCircle className="w-5 h-5 text-[var(--text-secondary)]" />
@@ -33,7 +36,6 @@ export async function Header() {
         </div>
       </header>
 
-      {/* Desktop */}
       <header className="sticky top-0 z-40 glass border-b border-[var(--border)]/60 hidden md:block">
         <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-14 gap-4">
           <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
@@ -48,13 +50,14 @@ export async function Header() {
             className="flex flex-1 max-w-md items-center gap-2.5 px-4 py-2.5 rounded-[18px] border border-[var(--border)] bg-[var(--bg-secondary)] text-sm text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-sm)] transition-all duration-300"
           >
             <Search className="w-4 h-4 shrink-0" />
-            <span>Поиск объявлений</span>
+            <span>{t("searchPlaceholder")}</span>
           </Link>
 
           <nav className="flex items-center gap-1 shrink-0">
+            <LocaleSwitcher className="mr-1" />
             {user && (
               <Link href="/messages">
-                <Button variant="ghost" size="sm">Сообщения</Button>
+                <Button variant="ghost" size="sm">{t("messages")}</Button>
               </Link>
             )}
             {user && <NotificationBell />}
@@ -65,23 +68,23 @@ export async function Header() {
                   <Button variant="ghost" size="sm">{user.name.split(" ")[0]}</Button>
                 </Link>
                 {user.role === "ADMIN" && (
-                  <Link href="/admin">
-                    <Button variant="ghost" size="sm">Админ</Button>
-                  </Link>
+                  <a href="/admin">
+                    <Button variant="ghost" size="sm">{t("admin")}</Button>
+                  </a>
                 )}
               </>
             ) : (
               <>
                 <Link href="/login">
-                  <Button variant="ghost" size="sm">Войти</Button>
+                  <Button variant="ghost" size="sm">{t("login")}</Button>
                 </Link>
                 <Link href="/register">
-                  <Button variant="secondary" size="sm">Регистрация</Button>
+                  <Button variant="secondary" size="sm">{t("register")}</Button>
                 </Link>
               </>
             )}
             <Link href="/create">
-              <Button size="sm">Подать</Button>
+              <Button size="sm">{t("post")}</Button>
             </Link>
           </nav>
         </div>

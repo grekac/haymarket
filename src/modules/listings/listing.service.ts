@@ -1,6 +1,8 @@
 import { listingRepository } from "./listing.repository";
 import { smartSearch, tokenize } from "@/lib/search";
 import { prisma } from "@/lib/prisma";
+import { expirePromotions } from "@/lib/analytics";
+import { isListingPromoted } from "@/lib/promotion";
 import { getVariantCodesFromGenerations } from "@/lib/car-generation-groups";
 import type { Prisma, DealType, PropertyType } from "@prisma/client";
 
@@ -94,12 +96,13 @@ export class ListingService {
     }
   }
 
-  private sortPromotedFirst<T extends { isPromoted: boolean; price: number; views: number; createdAt: Date }>(
-    items: T[],
-    sort?: string
-  ) {
+  private sortPromotedFirst<
+    T extends { isPromoted: boolean; promotedUntil: Date | null; price: number; views: number; createdAt: Date }
+  >(items: T[], sort?: string) {
     const cmp = (a: T, b: T) => {
-      if (a.isPromoted !== b.isPromoted) return a.isPromoted ? -1 : 1;
+      const aPromo = isListingPromoted(a);
+      const bPromo = isListingPromoted(b);
+      if (aPromo !== bPromo) return aPromo ? -1 : 1;
       if (sort === "price_asc") return a.price - b.price;
       if (sort === "price_desc") return b.price - a.price;
       if (sort === "popular") return b.views - a.views;
@@ -109,6 +112,7 @@ export class ListingService {
   }
 
   async search(filters: ListingFilters) {
+    await expirePromotions();
     const page = filters.page ?? 1;
     const limit = filters.limit ?? 20;
     const skip = (page - 1) * limit;
@@ -177,9 +181,11 @@ export class ListingService {
   }
 
   async getById(id: string) {
+    await expirePromotions();
     const listing = await this.repo.findById(id);
     if (!listing || listing.status !== "ACTIVE") return null;
-    await this.repo.incrementViews(id);
+    const { recordListingView } = await import("@/lib/analytics");
+    await recordListingView(id);
     return listing;
   }
 

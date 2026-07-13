@@ -1,6 +1,17 @@
 import { prisma } from "@/lib/prisma";
+import { notificationBody } from "@/lib/chat-media";
 import { detectLang } from "@/lib/translate";
+import type { MessageType } from "@prisma/client";
 
+export type SendMessageInput = {
+  content?: string;
+  type?: MessageType;
+  mediaUrl?: string;
+  mediaPublicId?: string | null;
+  mimeType?: string | null;
+  duration?: number | null;
+  thumbnailUrl?: string | null;
+};
 export class ChatService {
   async getConversation(conversationId: string, userId: string) {
     const conv = await prisma.conversation.findFirst({
@@ -104,9 +115,17 @@ export class ChatService {
     });
   }
 
-  async sendMessage(conversationId: string, senderId: string, content: string) {
-    const conv = await prisma.conversation.findFirst({
-      where: {
+  async sendMessage(conversationId: string, senderId: string, input: SendMessageInput | string) {
+    const payload: SendMessageInput =
+      typeof input === "string" ? { content: input, type: "TEXT" } : input;
+
+    const type = payload.type ?? "TEXT";
+    const content = (payload.content ?? "").trim();
+
+    if (type === "TEXT" && !content) throw new Error("Пустое сообщение");
+    if (type !== "TEXT" && !payload.mediaUrl) throw new Error("Файл не загружен");
+
+    const conv = await prisma.conversation.findFirst({      where: {
         id: conversationId,
         OR: [{ buyerId: senderId }, { sellerId: senderId }],
       },
@@ -118,12 +137,22 @@ export class ChatService {
     });
     if (!conv) throw new Error("Доступ запрещён");
 
-    const lang = detectLang(content.trim());
+    const lang = content ? detectLang(content) : null;
     const message = await prisma.message.create({
-      data: { conversationId, senderId, content: content.trim(), lang },
+      data: {
+        conversationId,
+        senderId,
+        type,
+        content,
+        mediaUrl: payload.mediaUrl ?? null,
+        mediaPublicId: payload.mediaPublicId ?? null,
+        mimeType: payload.mimeType ?? null,
+        duration: payload.duration ?? null,
+        thumbnailUrl: payload.thumbnailUrl ?? null,
+        lang,
+      },
       include: { sender: { select: { id: true, name: true, avatar: true } } },
-    });
-    await prisma.conversation.update({
+    });    await prisma.conversation.update({
       where: { id: conversationId },
       data: { updatedAt: new Date() },
     });
@@ -134,10 +163,9 @@ export class ChatService {
       userId: recipientId,
       type: "chat_message",
       title: "Новое сообщение",
-      body: `${message.sender.name}: ${content.trim().slice(0, 80)}`,
+      body: notificationBody(message.sender.name, message),
       link: `/messages/${conversationId}`,
     }).catch(() => {});
-
     return message;
   }
 }

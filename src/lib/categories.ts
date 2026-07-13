@@ -38,7 +38,7 @@ export async function getHomeCategories() {
         },
       }),
     ["home-categories"],
-    { revalidate: 300 }
+    { revalidate: 300, tags: ["categories", "home-categories"] }
   )();
 }
 

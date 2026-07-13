@@ -8,6 +8,7 @@ import { LogoutButton } from "@/components/layout/LogoutButton";
 import { VerifiedBadge, RatingStars } from "@/components/trust/VerifiedBadge";
 import { PromoteButton } from "@/components/listings/PromoteButton";
 import { MyListingActions } from "@/components/listings/MyListingActions";
+import { SellerAnalytics } from "@/components/seller/SellerAnalytics";
 import { VerifyPhoneCard } from "@/components/profile/VerifyPhoneCard";
 
 import { BackButton } from "@/components/ui/BackButton";
@@ -53,6 +54,8 @@ export default async function ProfilePage() {
         </div>
       </Card>
 
+      <SellerAnalytics />
+
       <h2 className="font-bold mb-4">Мои объявления</h2>
       {listings.length === 0 ? (
         <Link href="/create"><Button>Подать первое объявление</Button></Link>
@@ -69,7 +72,13 @@ export default async function ProfilePage() {
                   </span>
                 </p>
               </Link>
-              {l.status === "ACTIVE" && <PromoteButton listingId={l.id} isPromoted={l.isPromoted} />}
+              {l.status === "ACTIVE" && (
+                <PromoteButton
+                  listingId={l.id}
+                  isPromoted={l.isPromoted}
+                  promotedUntil={l.promotedUntil}
+                />
+              )}
               <MyListingActions listingId={l.id} />
             </div>
           ))}

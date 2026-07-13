@@ -1,22 +1,23 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, usePathname } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 import { Home, Heart, Plus, MessageCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const NAV = [
-  { href: "/", icon: Home, label: "Главная" },
-  { href: "/favorites", icon: Heart, label: "Избранное", badgeKey: "favorites" as const },
-  { href: "/create", icon: Plus, label: "Подать", accent: true },
-  { href: "/messages", icon: MessageCircle, label: "Чаты", badgeKey: "messages" as const },
-  { href: "/profile", icon: User, label: "Профиль" },
-];
-
 export function MobileNav() {
+  const t = useTranslations("nav");
   const pathname = usePathname();
   const [badges, setBadges] = useState({ favorites: 0, messages: 0 });
+
+  const NAV = [
+    { href: "/", icon: Home, label: t("home") },
+    { href: "/favorites", icon: Heart, label: t("favorites"), badgeKey: "favorites" as const },
+    { href: "/create", icon: Plus, label: t("post"), accent: true },
+    { href: "/messages", icon: MessageCircle, label: t("chats"), badgeKey: "messages" as const },
+    { href: "/profile", icon: User, label: t("profile") },
+  ];
 
   const hideOnListing = pathname.startsWith("/listing/");
   const hideOnChat = /^\/messages\/[^/]+$/.test(pathname);

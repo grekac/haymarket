@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { formatPrice, formatDate, cn } from "@/lib/utils";
+import { isListingPromoted } from "@/lib/promotion";
 
 type ListingData = {
   id: string;
@@ -12,6 +13,7 @@ type ListingData = {
   views: number;
   createdAt: Date;
   isPromoted?: boolean;
+  promotedUntil?: Date | string | null;
   images: { url: string }[];
   category: { name: string };
   carDetails?: { brand: string; model: string; generation?: string | null; year: number } | null;
@@ -25,6 +27,10 @@ type Props = {
 
 export function ListingCard({ listing, className, variant = "default" }: Props) {
   const image = listing.images[0]?.url;
+  const top = isListingPromoted({
+    isPromoted: !!listing.isPromoted,
+    promotedUntil: listing.promotedUntil ?? null,
+  });
 
   if (variant === "horizontal") {
     return (
@@ -74,7 +80,7 @@ export function ListingCard({ listing, className, variant = "default" }: Props) 
                 {listing.category.name}
               </div>
             )}
-            {listing.isPromoted && (
+            {top && (
               <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[var(--accent)] text-white text-[10px] font-semibold">
                 ТОП
               </span>
@@ -111,6 +117,11 @@ export function ListingCard({ listing, className, variant = "default" }: Props) 
             <div className="flex items-center justify-center h-full text-xs text-[var(--text-muted)]">
               {listing.category.name}
             </div>
+          )}
+          {top && (
+            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-[var(--accent)] text-white text-[10px] font-semibold">
+              ТОП
+            </span>
           )}
         </div>
         <div className="p-3.5">

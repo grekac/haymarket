@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { getSession } from "@/lib/auth";
 import { getPersonalizedHome } from "@/lib/personalization";
 import { PremiumSearchBar } from "@/components/home/PremiumSearchBar";
@@ -9,10 +10,18 @@ import { ListingCard } from "@/components/listings/ListingCard";
 import { Plus } from "lucide-react";
 import { RecentlyViewed } from "@/components/listings/RecentlyViewed";
 import { getHomeCategories } from "@/lib/categories";
+import { getSiteUrl } from "@/lib/site-url";
+import { setRequestLocale } from "next-intl/server";
 
 export const revalidate = 60;
 
-export default async function HomePage() {
+type Props = { params: Promise<{ locale: string }> };
+
+export default async function HomePage({ params }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
+  const t = await getTranslations("home");
   const session = await getSession();
 
   let categories: Awaited<ReturnType<typeof getHomeCategories>> = [];
@@ -33,19 +42,34 @@ export default async function HomePage() {
   }
 
   const greeting = session
-    ? `Привет, ${session.name.split(" ")[0]}`
-    : "HayMarket";
+    ? t("greetingUser", { name: session.name.split(" ")[0] })
+    : t("greeting");
 
   return (
     <div className="min-h-screen">
-      {/* Hero: search + greeting */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "HayMarket",
+            url: getSiteUrl(`/${locale}`),
+            inLanguage: locale === "hy" ? "hy-AM" : "ru-RU",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: `${getSiteUrl(`/${locale}/search`)}?q={search_term_string}`,
+              "query-input": "required name=search_term_string",
+            },
+          }),
+        }}
+      />
+
       <section className="px-4 pt-2 pb-5 md:pt-6 md:pb-8 max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-4 animate-fade-up md:hidden">
           <div>
-            <p className="text-[13px] text-[var(--text-muted)] font-medium">Армения</p>
-            <h1 className="text-[22px] font-bold tracking-tight leading-tight">
-              {greeting}
-            </h1>
+            <p className="text-[13px] text-[var(--text-muted)] font-medium">{t("country")}</p>
+            <h1 className="text-[22px] font-bold tracking-tight leading-tight">{greeting}</h1>
           </div>
           <Link
             href="/create"
@@ -57,10 +81,8 @@ export default async function HomePage() {
 
         <div className="hidden md:flex items-center justify-between mb-4 animate-fade-up">
           <div>
-            <p className="text-[13px] text-[var(--text-muted)] font-medium">Армения</p>
-            <h1 className="text-[28px] md:text-[32px] font-bold tracking-tight leading-tight">
-              {greeting}
-            </h1>
+            <p className="text-[13px] text-[var(--text-muted)] font-medium">{t("country")}</p>
+            <h1 className="text-[28px] md:text-[32px] font-bold tracking-tight leading-tight">{greeting}</h1>
           </div>
         </div>
 
@@ -69,35 +91,31 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Personal insights */}
       {feed.insights.length > 0 && (
         <section className="mb-6 animate-fade-up animate-delay-2">
           <div className="px-4 max-w-6xl mx-auto mb-3">
-            <h2 className="text-[17px] font-semibold tracking-tight">Для вас</h2>
+            <h2 className="text-[17px] font-semibold tracking-tight">{t("forYou")}</h2>
           </div>
           <InsightCards insights={feed.insights} />
         </section>
       )}
 
-      {/* Recently viewed */}
       <RecentlyViewed />
 
-      {/* Round category icons */}
       <section className="px-4 mb-8 max-w-6xl mx-auto animate-fade-up animate-delay-2">
-        <SectionHeader title="Категории" href="/categories" />
+        <SectionHeader title={t("categories")} href="/categories" />
         <CategoryShowcase categories={categories} orb />
       </section>
 
-      {/* New listings */}
       <section className="px-4 mb-10 max-w-6xl mx-auto animate-fade-up animate-delay-3">
         <SectionHeader
-          title="Новые объявления"
-          subtitle={`${feed.total} на платформе`}
+          title={t("newListings")}
+          subtitle={t("onPlatform", { count: feed.total })}
           href="/search?sort=newest"
         />
         {feed.newListings.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--text-muted)]">
-            <p>Объявлений пока нет на сайте.</p>
+            <p>{t("noListings")}</p>
           </div>
         ) : (
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none snap-x snap-mandatory md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-4 md:overflow-visible md:mx-0 md:px-0">
@@ -108,14 +126,9 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* Popular nearby */}
       <section className="px-4 mb-10 max-w-6xl mx-auto bg-[var(--bg-secondary)] -mx-0 py-8 md:rounded-[24px] md:mx-auto md:max-w-6xl animate-fade-up animate-delay-4">
         <div className="max-w-6xl mx-auto">
-          <SectionHeader
-            title="Популярные рядом"
-            subtitle="В Ереване и окрестностях"
-            href="/map"
-          />
+          <SectionHeader title={t("popularNearby")} subtitle={t("nearYerevan")} href="/map" />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
             {feed.popularNearby.map((l) => (
               <ListingCard key={l.id} listing={l} variant="premium" />
@@ -124,14 +137,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Single useful CTA — no banner spam */}
       <section className="px-4 pb-10 max-w-6xl mx-auto">
         <Link
           href="/create"
           className="block p-5 rounded-[22px] bg-gradient-to-r from-[var(--accent)] to-[#1a5fbf] text-white shadow-[var(--shadow-float)] active:scale-[0.99] transition-transform duration-300"
         >
-          <p className="font-semibold text-[17px]">Подать объявление за 30 сек</p>
-          <p className="text-sm opacity-80 mt-1">AI напишет описание и подскажет цену</p>
+          <p className="font-semibold text-[17px]">{t("ctaTitle")}</p>
+          <p className="text-sm opacity-80 mt-1">{t("ctaSubtitle")}</p>
         </Link>
       </section>
     </div>

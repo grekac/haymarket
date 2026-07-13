@@ -1,0 +1,109 @@
+{
+  "meta": {
+    "title": "HayMarket — Հայաստանի հայտարարություններ",
+    "description": "Պրեմիում շուկա գնելու և վաճառելու համար Հայաստանում"
+  },
+  "nav": {
+    "searchPlaceholder": "Որոնել հայտարարություններ",
+    "messages": "Հաղորդագրություններ",
+    "login": "Մուտք",
+    "register": "Գրանցում",
+    "post": "Տեղադրել",
+    "admin": "Ադմին",
+    "home": "Գլխավոր",
+    "favorites": "Նախընտրած",
+    "chats": "Զրույցներ",
+    "profile": "Պրոֆիլ"
+  },
+  "footer": {
+    "tagline": "Հայաստանի հայտարարությունների շուկա",
+    "cities": "Քաղաքներ",
+    "sections": "Բաժիններ",
+    "categories": "Կատեգորիաներ",
+    "search": "Որոնում",
+    "post": "Տեղադրել"
+  },
+  "home": {
+    "country": "Հայաստան",
+    "greeting": "HayMarket",
+    "greetingUser": "Բարև, {name}",
+    "forYou": "Ձեզ համար",
+    "categories": "Կատեգորիաներ",
+    "newListings": "Նոր հայտարարություններ",
+    "onPlatform": "{count} հարթակում",
+    "noListings": "Դեռ հայտարարություններ չկան։",
+    "popularNearby": "Հայտնի մոտակայքում",
+    "nearYerevan": "Երևանում և մերձակայքում",
+    "ctaTitle": "Տեղադրել հայտարարություն 30 վայրկյանում",
+    "ctaSubtitle": "AI-ն կգրի նկարագրությունը և կառաջարկի գին"
+  },
+  "search": {
+    "title": "Որոնում",
+    "allListings": "Բոլոր հայտարարությունները",
+    "results": "{count} արդյունք",
+    "empty": "Ոչինչ չի գտնվել"
+  },
+  "listing": {
+    "condition": {
+      "new": "Նոր",
+      "used": "Օգտագործված",
+      "refurbished": "Վերականգնված"
+    },
+    "views": "դիտում",
+    "description": "Նկարագրություն",
+    "video": "Տեսանյութ",
+    "similar": "Նման",
+    "sellerChannel": "Վաճառողի էջ և կարծիքներ",
+    "itemsForSale": "ապրանքներ վաճառքում"
+  },
+  "common": {
+    "negotiable": "Պայմանավորված",
+    "back": "Հետ",
+    "justNow": "հենց հիմա",
+    "minutesAgo": "{n} րոպե առաջ",
+    "hoursAgo": "{n} ժ առաջ",
+    "daysAgo": "{n} օր առաջ"
+  },
+  "categories": {
+    "cars": "Ավտոմեքենաներ",
+    "real-estate": "Անշարժ գույք",
+    "electronics": "Էլեկտրոնիկա",
+    "jobs": "Աշխատանք",
+    "services": "Ծառայություններ",
+    "home-furniture": "Տուն և կահույք",
+    "clothing": "Հագուստ",
+    "kids": "Մանկական",
+    "animals": "Կենդանիներ",
+    "other": "Այլ"
+  },
+  "analytics": {
+    "title": "Վիճակագրություն",
+    "loading": "Բեռնվում է…",
+    "totalViews": "Ընդամենը դիտումներ",
+    "views7d": "7 օրվա դիտումներ",
+    "favorites": "Նախընտրածներ",
+    "messages": "Հաղորդագրություններ",
+    "viewsChart": "Դիտումներ 7 օրում",
+    "activeListings": "{count} ակտիվ",
+    "activePromotions": "{count} առաջխաղացում",
+    "spent": "Ծախսված {amount}",
+    "byListing": "Ըստ հայտարարության",
+    "viewsTotal": "դիտում",
+    "views7dShort": "7 օր",
+    "promoted": "ՏՕП"
+  },
+  "promote": {
+    "button": "Առաջ տանել",
+    "active": "ՏՕП · {days} օր",
+    "modalTitle": "Առաջացնել հայտարարությունը",
+    "modalSubtitle": "Հայտարարությունը կլինի որոնման վերևում",
+    "demoPayment": "Demo-վճարում — արտադրությունում Stripe",
+    "cancel": "Չեղարկել",
+    "error": "Սխալ",
+    "packages": {
+      "basic": { "name": "Բազային · 7 օր", "desc": "Որոնման վերևում" },
+      "standard": { "name": "Ստանդարտ · 14 օր", "desc": "Ավելի երկար տեսանելիություն" },
+      "premium": { "name": "Պրեմիում · 30 օր", "desc": "Առավելագույն արդյունավետություն" }
+    }
+  }
+}

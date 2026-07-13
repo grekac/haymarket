@@ -15,8 +15,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Войдите" }, { status: 401 });
   const { id } = await params;
-  const { content } = await request.json();
-  const message = await chatService.sendMessage(id, session.id, content);
+  const body = await request.json();
+  const message = await chatService.sendMessage(id, session.id, body);
 
   // Notify socket server (best-effort)
   try {

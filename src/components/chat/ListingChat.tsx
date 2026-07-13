@@ -4,19 +4,13 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { io, type Socket } from "socket.io-client";
-import { ChevronLeft, Languages, Send } from "lucide-react";
+import { ChevronLeft, ImageIcon, Languages, Mic, Send, Square, Video } from "lucide-react";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { LANG_LABELS, type Lang } from "@/lib/translate";
 import { scanMessageForScam } from "@/lib/safety";
 import { getSocketUrl } from "@/lib/socket-url";
-
-type Message = {
-  id: string;
-  content: string;
-  createdAt: string;
-  lang?: string | null;
-  sender: { id: string; name: string };
-};
+import { type ChatMediaKind } from "@/lib/chat-media";
+import { ChatMessage, MessageBubble } from "@/components/chat/MessageBubble";
 
 type Conversation = {
   id: string;
@@ -44,7 +38,7 @@ const QUICK_REPLIES = [
 ];
 
 export function ListingChat({ conversationId }: { conversationId: string }) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [text, setText] = useState("");
   const [userId, setUserId] = useState("");
@@ -52,21 +46,30 @@ export function ListingChat({ conversationId }: { conversationId: string }) {
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [warning, setWarning] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [recording, setRecording] = useState(false);
   const [typing, setTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const seenIds = useRef(new Set<string>());
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const voiceStreamRef = useRef<MediaStream | null>(null);
+  const voiceChunksRef = useRef<Blob[]>([]);
+  const recordStartedRef = useRef<number>(0);
 
-  const addMessage = useCallback((msg: Message) => {
+  const addMessage = useCallback((msg: ChatMessage) => {
     if (seenIds.current.has(msg.id)) return;
     seenIds.current.add(msg.id);
     setMessages((prev) => [...prev, msg]);
   }, []);
 
   const autoTranslate = useCallback(
-    async (msg: Message) => {
-      if (msg.sender.id === userId) return;
+    async (msg: ChatMessage) => {
+      if (msg.sender.id === userId || msg.type !== "TEXT" || !msg.content?.trim()) return;
       const res = await fetch("/api/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -93,7 +96,7 @@ export function ListingChat({ conversationId }: { conversationId: string }) {
 
     fetch(`/api/conversations/${conversationId}/messages`)
       .then((r) => r.json())
-      .then((list: Message[]) => {
+      .then((list: ChatMessage[]) => {
         list.forEach((m) => seenIds.current.add(m.id));
         setMessages(list);
       });
@@ -113,7 +116,7 @@ export function ListingChat({ conversationId }: { conversationId: string }) {
         .catch(() => {});
     });
 
-    socket.on("message", (msg: Message) => {
+    socket.on("message", (msg: ChatMessage) => {
       addMessage(msg);
       autoTranslate(msg);
     });
@@ -136,6 +139,28 @@ export function ListingChat({ conversationId }: { conversationId: string }) {
     });
   }, [translateTo, messages, userId, translations, autoTranslate]);
 
+  useEffect(() => {
+    return () => {
+      voiceStreamRef.current?.getTracks().forEach((t) => t.stop());
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
+  }, []);
+
+  async function postMessage(body: Record<string, unknown>) {
+    const res = await fetch(`/api/conversations/${conversationId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || "Не удалось отправить");
+    }
+    const msg = await res.json();
+    addMessage(msg);
+    return msg;
+  }
+
   async function send(content?: string) {
     const body = (content ?? text).trim();
     if (!body || sending) return;
@@ -145,24 +170,101 @@ export function ListingChat({ conversationId }: { conversationId: string }) {
 
     setSending(true);
     try {
-      const res = await fetch(`/api/conversations/${conversationId}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: body }),
-      });
-      if (!res.ok) return;
-      const msg = await res.json();
-      addMessage(msg);
+      await postMessage({ type: "TEXT", content: body });
       setText("");
+      socketRef.current?.emit("stop_typing", { conversationId, userId });
       inputRef.current?.focus();
+    } catch (err) {
+      setWarning(err instanceof Error ? err.message : "Ошибка отправки");
     } finally {
       setSending(false);
     }
   }
 
+  async function sendMedia(file: File, kind: ChatMediaKind, caption = "") {
+    if (sending || uploading) return;
+
+    setUploading(true);
+    setSending(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("purpose", "chat");
+      fd.append("kind", kind);
+
+      const uploadRes = await fetch("/api/upload", { method: "POST", body: fd });
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok) throw new Error(uploadData.error || "Ошибка загрузки");
+
+      let duration = uploadData.duration as number | undefined;
+      if (kind === "voice" && !duration && recordStartedRef.current) {
+        duration = Math.max(1, Math.round((Date.now() - recordStartedRef.current) / 1000));
+      }
+
+      await postMessage({
+        type: uploadData.type ?? kind.toUpperCase(),
+        content: caption,
+        mediaUrl: uploadData.url,
+        mediaPublicId: uploadData.publicId,
+        mimeType: file.type,
+        duration: duration ?? null,
+      });
+    } catch (err) {
+      setWarning(err instanceof Error ? err.message : "Ошибка отправки файла");
+    } finally {
+      setUploading(false);
+      setSending(false);
+    }
+  }
+
+  async function onFileSelected(files: FileList | null, kind: ChatMediaKind) {
+    const file = files?.[0];
+    if (!file) return;
+    const caption = text.trim();
+    if (caption) setText("");
+    await sendMedia(file, kind, caption);
+  }
+
+  async function startRecording() {
+    if (recording || sending) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      voiceStreamRef.current = stream;
+      voiceChunksRef.current = [];
+      const mr = new MediaRecorder(stream);
+      mr.ondataavailable = (e) => {
+        if (e.data.size > 0) voiceChunksRef.current.push(e.data);
+      };
+      mr.onstop = async () => {
+        const blob = new Blob(voiceChunksRef.current, { type: mr.mimeType || "audio/webm" });
+        const ext = mr.mimeType.includes("mp4") ? "m4a" : "webm";
+        const file = new File([blob], `voice.${ext}`, { type: mr.mimeType || "audio/webm" });
+        stream.getTracks().forEach((t) => t.stop());
+        voiceStreamRef.current = null;
+        await sendMedia(file, "voice");
+      };
+      mediaRecorderRef.current = mr;
+      recordStartedRef.current = Date.now();
+      mr.start();
+      setRecording(true);
+    } catch {
+      setWarning("Нет доступа к микрофону");
+    }
+  }
+
+  function stopRecording() {
+    if (!recording) return;
+    mediaRecorderRef.current?.stop();
+    setRecording(false);
+  }
+
   function onInputChange(value: string) {
     setText(value);
     socketRef.current?.emit("typing", { conversationId, userId });
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      socketRef.current?.emit("stop_typing", { conversationId, userId });
+    }, 1500);
   }
 
   const other =
@@ -173,10 +275,10 @@ export function ListingChat({ conversationId }: { conversationId: string }) {
       : null;
 
   const listingImage = conversation?.listing.images[0]?.url;
+  const busy = sending || uploading;
 
   return (
     <div className="flex flex-col h-full md:h-[calc(100vh-8rem)] md:max-w-2xl md:mx-auto bg-[var(--bg-primary)]">
-      {/* Header */}
       <div className="glass border-b border-[var(--border)]/60 shrink-0">
         <div className="px-4 py-3 flex items-center gap-3">
           <Link href="/messages" className="p-1 -ml-1 text-[var(--brand)] shrink-0">
@@ -185,7 +287,7 @@ export function ListingChat({ conversationId }: { conversationId: string }) {
           <div className="flex-1 min-w-0 text-center">
             <p className="font-semibold text-[15px] truncate">{other?.name ?? "Чат"}</p>
             <p className="text-[11px] text-[var(--text-muted)]">
-              {typing ? "печатает…" : "переписка о товаре"}
+              {uploading ? "загрузка…" : typing ? "печатает…" : "переписка о товаре"}
             </p>
           </div>
           <div className="w-6 shrink-0" />
@@ -217,7 +319,6 @@ export function ListingChat({ conversationId }: { conversationId: string }) {
         )}
       </div>
 
-      {/* Language */}
       <div className="flex justify-center gap-1.5 py-2 px-4 shrink-0 border-b border-[var(--border)]/30">
         <Languages className="w-3.5 h-3.5 text-[var(--text-muted)] self-center mr-1" />
         {TARGET_LANGS.map((l) => (
@@ -239,18 +340,18 @@ export function ListingChat({ conversationId }: { conversationId: string }) {
       {warning && (
         <div className="mx-4 mt-2 p-3 rounded-2xl bg-[var(--danger-soft)] border border-[var(--danger)]/20 text-[12px] text-[var(--danger)] shrink-0">
           {warning}
+          <button type="button" className="ml-2 underline" onClick={() => setWarning(null)}>
+            Закрыть
+          </button>
         </div>
       )}
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {messages.length === 0 && (
           <div className="text-center py-12 px-4">
-            <p className="text-sm text-[var(--text-muted)]">
-              Напишите продавцу по поводу товара
-            </p>
+            <p className="text-sm text-[var(--text-muted)]">Напишите продавцу по поводу товара</p>
             <p className="text-xs text-[var(--text-muted)] mt-1">
-              Не переводите деньги заранее — договоритесь о встрече
+              Можно отправить текст, фото, видео или голосовое
             </p>
           </div>
         )}
@@ -258,36 +359,18 @@ export function ListingChat({ conversationId }: { conversationId: string }) {
         {messages.map((m) => {
           const mine = m.sender.id === userId;
           return (
-            <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[82%] flex flex-col ${mine ? "items-end" : "items-start"}`}>
-                {!mine && (
-                  <p className="text-[10px] text-[var(--text-muted)] mb-1 px-1">{m.sender.name}</p>
-                )}
-                <div
-                  className={`px-4 py-2.5 text-[15px] leading-relaxed ${
-                    mine
-                      ? "bg-[var(--accent)] text-[var(--accent-fg)] rounded-[20px] rounded-br-[6px]"
-                      : "bg-[var(--bg-secondary)] text-[var(--text-primary)] rounded-[20px] rounded-bl-[6px] border border-[var(--border)]/50"
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                  {translations[m.id] && !mine && (
-                    <p className="text-[12px] opacity-70 mt-1.5 pt-1.5 border-t border-[var(--border)]/40 italic">
-                      {translations[m.id]}
-                    </p>
-                  )}
-                </div>
-                <p className="text-[10px] text-[var(--text-muted)] mt-1 px-1">
-                  {formatDate(m.createdAt)}
-                </p>
-              </div>
+            <div key={m.id} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
+              <MessageBubble message={m} mine={mine} translation={translations[m.id]} />
+              <p className="text-[10px] text-[var(--text-muted)] mt-1 px-1">
+                {formatDate(m.createdAt)}
+              </p>
             </div>
           );
         })}
+
         <div ref={bottomRef} />
       </div>
 
-      {/* Quick replies */}
       {messages.length < 3 && (
         <div className="px-4 pb-2 flex gap-2 overflow-x-auto shrink-0 scrollbar-hide">
           {QUICK_REPLIES.map((q) => (
@@ -295,7 +378,8 @@ export function ListingChat({ conversationId }: { conversationId: string }) {
               key={q}
               type="button"
               onClick={() => send(q)}
-              className="shrink-0 text-xs px-3 py-2 rounded-full border border-[var(--border)] bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] transition-colors whitespace-nowrap"
+              disabled={busy}
+              className="shrink-0 text-xs px-3 py-2 rounded-full border border-[var(--border)] bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] transition-colors whitespace-nowrap disabled:opacity-50"
             >
               {q}
             </button>
@@ -303,14 +387,60 @@ export function ListingChat({ conversationId }: { conversationId: string }) {
         </div>
       )}
 
-      {/* Input */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
           send();
         }}
-        className="glass border-t border-[var(--border)]/60 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] flex items-end gap-2 shrink-0"
+        className="glass border-t border-[var(--border)]/60 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] flex items-end gap-1.5 shrink-0"
       >
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="hidden"
+          onChange={(e) => onFileSelected(e.target.files, "image")}
+        />
+        <input
+          ref={videoInputRef}
+          type="file"
+          accept="video/mp4,video/webm,video/quicktime"
+          className="hidden"
+          onChange={(e) => onFileSelected(e.target.files, "video")}
+        />
+
+        <button
+          type="button"
+          disabled={busy || recording}
+          onClick={() => imageInputRef.current?.click()}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--bg-secondary)] disabled:opacity-30 shrink-0"
+          aria-label="Фото"
+        >
+          <ImageIcon className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          disabled={busy || recording}
+          onClick={() => videoInputRef.current?.click()}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--bg-secondary)] disabled:opacity-30 shrink-0"
+          aria-label="Видео"
+        >
+          <Video className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={recording ? stopRecording : startRecording}
+          className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+            recording
+              ? "bg-red-500 text-white animate-pulse"
+              : "text-[var(--text-muted)] hover:bg-[var(--bg-secondary)]"
+          }`}
+          aria-label={recording ? "Остановить запись" : "Голосовое"}
+        >
+          {recording ? <Square className="w-3.5 h-3.5 fill-current" /> : <Mic className="w-4 h-4" />}
+        </button>
+
         <textarea
           ref={inputRef}
           value={text}
@@ -321,13 +451,14 @@ export function ListingChat({ conversationId }: { conversationId: string }) {
               send();
             }
           }}
-          placeholder="Сообщение о товаре…"
+          placeholder={recording ? "Идёт запись…" : "Сообщение или подпись к файлу…"}
           rows={1}
-          className="flex-1 px-4 py-2.5 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border)] text-[15px] outline-none focus:border-[var(--brand)]/40 resize-none max-h-24 transition-colors"
+          disabled={recording}
+          className="flex-1 px-4 py-2.5 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border)] text-[15px] outline-none focus:border-[var(--brand)]/40 resize-none max-h-24 transition-colors disabled:opacity-60"
         />
         <button
           type="submit"
-          disabled={!text.trim() || sending}
+          disabled={!text.trim() || busy || recording}
           className="w-10 h-10 rounded-full bg-[var(--accent)] text-[var(--accent-fg)] flex items-center justify-center disabled:opacity-30 active:scale-95 transition-all shrink-0"
         >
           <Send className="w-4 h-4" />

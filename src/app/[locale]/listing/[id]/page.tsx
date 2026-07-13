@@ -8,6 +8,9 @@ import { listingRepository } from "@/modules/listings/listing.repository";
 import { getSession } from "@/lib/auth";
 import { favoriteService } from "@/modules/favorites/favorite.service";
 import { formatPrice, formatDate, formatNumber } from "@/lib/utils";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { openGraphLocales, type AppLocale } from "@/i18n/routing";
+import { listingAlternates } from "@/lib/seo";
 import { getSiteUrl } from "@/lib/site-url";
 import { BackButton } from "@/components/ui/BackButton";
 import { ListingSpecs } from "@/components/listings/ListingSpecs";
@@ -20,38 +23,45 @@ import { SafetyBanner } from "@/components/trust/SafetyBanner";
 import { ReportButton } from "@/components/trust/ReportButton";
 import { SectionHeader } from "@/components/home/SectionHeader";
 import { TrackRecentlyViewed } from "@/components/listings/TrackRecentlyViewed";
+import { PriceEstimatePanel } from "@/components/listings/PriceEstimatePanel";
+import { estimateCarPriceForListing } from "@/lib/ai-price-estimate";
 
-type Params = Promise<{ id: string }>;
+type Params = Promise<{ locale: string; id: string }>;
 
 export const revalidate = 60;
 
-const CONDITION_LABELS: Record<string, string> = {
-  new: "Новое",
-  used: "Б/у",
-  refurbished: "Восстановленное",
-};
+const CONDITION_KEYS = ["new", "used", "refurbished"] as const;
+
+function conditionLabel(t: Awaited<ReturnType<typeof getTranslations>>, condition: string) {
+  if (CONDITION_KEYS.includes(condition as (typeof CONDITION_KEYS)[number])) {
+    return t(`condition.${condition as (typeof CONDITION_KEYS)[number]}`);
+  }
+  return condition;
+}
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const { id } = await params;
+  const { id, locale } = await params;
   const listing = await listingRepository.findById(id);
   if (!listing || listing.status !== "ACTIVE") {
-    return { title: "Объявление — HayMarket" };
+    return { title: "HayMarket" };
   }
 
   const image = listing.images[0]?.url;
   const description = listing.description.slice(0, 160);
   const title = `${listing.title} — ${formatPrice(listing.price, listing.currency)}`;
+  const appLocale = locale as AppLocale;
 
   return {
     title,
     description,
+    alternates: listingAlternates(id, appLocale),
     openGraph: {
       title: listing.title,
       description,
-      url: getSiteUrl(`/listing/${id}`),
+      url: listingAlternates(id, appLocale).canonical,
       siteName: "HayMarket",
       images: image ? [{ url: image, width: 800, height: 600, alt: listing.title }] : [],
-      locale: "ru_RU",
+      locale: openGraphLocales[appLocale],
       type: "website",
     },
     twitter: {
@@ -64,7 +74,9 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 export default async function ListingPage({ params }: { params: Params }) {
-  const { id } = await params;
+  const { id, locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("listing");
   const listing = await listingService.getById(id);
   if (!listing) notFound();
 
@@ -91,6 +103,11 @@ export default async function ListingPage({ params }: { params: Params }) {
     category: listing.category.name,
   };
 
+  const liveEstimate =
+    listing.carDetails && !listing.aiPriceHint
+      ? await estimateCarPriceForListing(listing.id)
+      : null;
+
   return (
     <div className="pb-28 md:pb-12">
       <TrackRecentlyViewed
@@ -114,7 +131,7 @@ export default async function ListingPage({ params }: { params: Params }) {
               price: listing.price,
               priceCurrency: listing.currency,
               availability: "https://schema.org/InStock",
-              url: getSiteUrl(`/listing/${id}`),
+              url: getSiteUrl(`/${locale}/listing/${id}`),
             },
           }),
         }}
@@ -139,16 +156,22 @@ export default async function ListingPage({ params }: { params: Params }) {
                     <p className="text-[34px] md:text-[40px] font-bold tracking-tight leading-none">
                       {formatPrice(listing.price, listing.currency)}
                     </p>
-                    {listing.aiPriceHint && (
-                      <p className="text-[13px] text-[var(--emerald)] mt-2 font-medium">
-                        AI-оценка: ~{formatPrice(listing.aiPriceHint, listing.currency)}
-                      </p>
-                    )}
                   </div>
                   <span className="px-3 py-1.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-semibold">
                     {listing.category.name}
                   </span>
                 </div>
+
+                {(listing.aiPriceHint || liveEstimate) && (
+                  <PriceEstimatePanel
+                    listedPrice={listing.price}
+                    currency={listing.currency}
+                    aiPriceHint={listing.aiPriceHint}
+                    aiPriceMin={listing.aiPriceMin}
+                    aiPriceMax={listing.aiPriceMax}
+                    estimate={liveEstimate}
+                  />
+                )}
 
                 <h1 className="text-lg md:text-xl font-semibold mt-4 leading-snug text-[var(--text-primary)]">
                   {listing.title}
@@ -160,14 +183,14 @@ export default async function ListingPage({ params }: { params: Params }) {
                     {[listing.city, listing.district].filter(Boolean).join(", ")}
                   </span>
                   <span className="px-3 py-1.5 rounded-full bg-[var(--bg-secondary)] text-[12px] font-medium text-[var(--text-secondary)]">
-                    {CONDITION_LABELS[listing.condition] ?? listing.condition}
+                    {conditionLabel(t, listing.condition)}
                   </span>
                 </div>
 
                 <div className="flex flex-wrap gap-4 mt-4 text-[13px] text-[var(--text-muted)]">
                   <span className="flex items-center gap-1">
                     <Eye className="w-3.5 h-3.5" />
-                    {formatNumber(listing.views)} просмотров
+                    {formatNumber(listing.views)} {t("views")}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" />
@@ -182,7 +205,7 @@ export default async function ListingPage({ params }: { params: Params }) {
             </div>
 
             <Card className="p-5 md:p-6">
-              <h2 className="font-semibold text-[16px] mb-3">Описание</h2>
+              <h2 className="font-semibold text-[16px] mb-3">{t("description")}</h2>
               <p className="text-[var(--text-secondary)] text-[15px] leading-relaxed whitespace-pre-wrap">
                 {listing.description}
               </p>
@@ -190,7 +213,7 @@ export default async function ListingPage({ params }: { params: Params }) {
 
             {listing.videoUrl && (
               <Card className="p-5">
-                <h2 className="font-semibold text-[15px] mb-3">Видео</h2>
+                <h2 className="font-semibold text-[15px] mb-3">{t("video")}</h2>
                 <video src={listing.videoUrl} controls className="w-full rounded-2xl" />
               </Card>
             )}
@@ -215,7 +238,7 @@ export default async function ListingPage({ params }: { params: Params }) {
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold">{listing.user.name}</p>
                   <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                    {formatNumber(sellerActiveCount)} товаров в продаже
+                    {formatNumber(sellerActiveCount)} {t("itemsForSale")}
                   </p>
                 </div>
               </div>
@@ -224,7 +247,7 @@ export default async function ListingPage({ params }: { params: Params }) {
                 className="mt-4 w-full h-11 rounded-2xl bg-[var(--accent)] text-[var(--accent-fg)] font-semibold text-sm flex items-center justify-center gap-2"
               >
                 <Store className="w-4 h-4" />
-                Канал продавца и отзывы
+                {t("sellerChannel")}
               </Link>
             </Card>
           </div>
@@ -250,7 +273,7 @@ export default async function ListingPage({ params }: { params: Params }) {
 
         {similar.length > 0 && (
           <section className="mt-12 mb-8">
-            <SectionHeader title="Похожие" href={`/search?category=${listing.category.slug}`} />
+            <SectionHeader title={t("similar")} href={`/search?category=${listing.category.slug}`} />
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
               {similar.map((l) => (
                 <ListingCard key={l.id} listing={l} variant="premium" />

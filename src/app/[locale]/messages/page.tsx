@@ -4,6 +4,7 @@ import Image from "next/image";
 import { getSession } from "@/lib/auth";
 import { chatService } from "@/modules/chat/chat.service";
 import { formatDate, formatPrice } from "@/lib/utils";
+import { messagePreview } from "@/lib/chat-media";
 import { BackButton } from "@/components/ui/BackButton";
 
 export default async function MessagesPage() {
@@ -75,8 +76,10 @@ export default async function MessagesPage() {
                         unread > 0 ? "text-[var(--text-primary)] font-medium" : "text-[var(--text-muted)]"
                       }`}
                     >
-                      {last.senderId === user.id ? "Вы: " : ""}
-                      {last.content}
+                      {messagePreview(
+                        last,
+                        last.senderId === user.id ? "Вы: " : ""
+                      )}
                     </p>
                   )}
                 </div>
