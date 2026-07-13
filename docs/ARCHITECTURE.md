@@ -209,6 +209,22 @@ npm run dev                   # Локальная разработка
 
 ---
 
+## Этап 7 — Scale & DevOps
+
+| Компонент | Реализация |
+|-----------|------------|
+| CI | GitHub Actions: `prisma validate`, typecheck, lint, build |
+| Docker | `output: standalone`, healthchecks в compose |
+| Health | `/api/health` (Render, всегда 200), `/api/ready` (503 без БД) |
+| Rate limit | Edge middleware (memory) + Upstash Redis для API (опционально) |
+| Логи | `src/lib/logger.ts`, `instrumentation.ts` |
+| Безопасность | Security headers в `next.config.ts` |
+| Документация | `docs/DEPLOY.md` |
+
+Подробности деплоя: [DEPLOY.md](./DEPLOY.md)
+
+---
+
 ## Переменные окружения
 
 ```env

@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import NextLink from "next/link";
 import { Link } from "@/i18n/navigation";
 import { getSession } from "@/lib/auth";
 import { ThemeToggle } from "./ThemeToggle";
@@ -68,9 +69,9 @@ export async function Header() {
                   <Button variant="ghost" size="sm">{user.name.split(" ")[0]}</Button>
                 </Link>
                 {user.role === "ADMIN" && (
-                  <a href="/admin">
+                  <NextLink href="/admin">
                     <Button variant="ghost" size="sm">{t("admin")}</Button>
-                  </a>
+                  </NextLink>
                 )}
               </>
             ) : (

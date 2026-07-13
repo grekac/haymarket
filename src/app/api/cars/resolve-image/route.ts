@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ url });
   }
 
-  let url = await resolveGenerationImage(
+  const url = await resolveGenerationImage(
     gen.model.brand.name,
     gen.model.name,
     gen.code,
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       continue;
     }
 
-    let url = await resolveGenerationImage(
+    const url = await resolveGenerationImage(
       gen.model.brand.name,
       gen.model.name,
       gen.code,

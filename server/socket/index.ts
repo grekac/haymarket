@@ -5,11 +5,20 @@ import { verifyInternalSecret, verifySocketToken } from "./auth";
 const PORT = Number(process.env.PORT || process.env.SOCKET_PORT) || 3001;
 const HOST = process.env.HOST || "0.0.0.0";
 
-const allowedOrigins = [
-  process.env.NEXT_PUBLIC_APP_URL,
-  "http://localhost:3000",
-  "https://haymarket-jct5.onrender.com",
-].filter(Boolean) as string[];
+function normalizeOrigin(origin: string): string {
+  const trimmed = origin.trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+  if (trimmed.includes("localhost") || trimmed.startsWith("127.0.0.1")) return `http://${trimmed}`;
+  return `https://${trimmed}`;
+}
+
+const allowedOrigins = (
+  process.env.ALLOWED_ORIGINS ??
+  [process.env.NEXT_PUBLIC_APP_URL, "http://localhost:3000"].filter(Boolean).join(",")
+)
+  .split(",")
+  .map((o) => normalizeOrigin(o))
+  .filter(Boolean);
 
 const httpServer = createServer(async (req, res) => {
   if (req.method === "GET" && (req.url === "/" || req.url === "/health")) {

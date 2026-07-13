@@ -3,22 +3,9 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyTokenEdge } from "@/lib/auth-edge";
 import { routing } from "@/i18n/routing";
+import { rateLimitEdge } from "@/lib/rate-limit-edge";
 
 const intlMiddleware = createMiddleware(routing);
-
-const rateMap = new Map<string, { count: number; reset: number }>();
-
-function rateLimit(ip: string, limit = 30, windowMs = 60_000): boolean {
-  const now = Date.now();
-  const entry = rateMap.get(ip);
-  if (!entry || now > entry.reset) {
-    rateMap.set(ip, { count: 1, reset: now + windowMs });
-    return true;
-  }
-  if (entry.count >= limit) return false;
-  entry.count++;
-  return true;
-}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -29,13 +16,13 @@ export async function middleware(request: NextRequest) {
   }
 
   if (pathname.startsWith("/api/auth/")) {
-    if (!rateLimit(`auth:${ip}`, 20, 60_000)) {
+    if (!rateLimitEdge(`auth:${ip}`, 20, 60)) {
       return NextResponse.json({ error: "Слишком много запросов" }, { status: 429 });
     }
   }
 
   if (pathname.startsWith("/api/ai/")) {
-    if (!rateLimit(`ai:${ip}`, 15, 60_000)) {
+    if (!rateLimitEdge(`ai:${ip}`, 15, 60)) {
       return NextResponse.json({ error: "Слишком много запросов" }, { status: 429 });
     }
   }
@@ -61,5 +48,11 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
+  matcher: [
+    "/api/auth/:path*",
+    "/api/ai/:path*",
+    "/admin/:path*",
+    "/api/debug",
+    "/((?!api|_next|.*\\..*).*)",
+  ],
 };

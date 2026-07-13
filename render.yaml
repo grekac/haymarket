@@ -61,3 +61,13 @@ services:
           name: haymarket
           type: web
           envVarKey: INTERNAL_SOCKET_SECRET
+      - key: NEXT_PUBLIC_APP_URL
+        fromService:
+          name: haymarket
+          type: web
+          property: host
+      - key: ALLOWED_ORIGINS
+        fromService:
+          name: haymarket
+          type: web
+          property: host

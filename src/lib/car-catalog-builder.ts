@@ -189,7 +189,7 @@ export function buildCarCatalogFromPackage(): SeedBrand[] {
     const displayName = displayModelName(modelName, kind);
     const mKey = `${kind}|${normalizeModelKey(modelName)}`;
     const genKey = modelMatchKey(brandName, modelName);
-    let generations = filterGenerations(
+    const generations = filterGenerations(
       generationsIndex.get(genKey) ?? defaultGeneration(brandName, displayName),
       brandSlug,
       modelSlug ?? modelToSlug(modelName)

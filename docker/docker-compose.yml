@@ -19,7 +19,7 @@ services:
 
   socket:
     build:
-      context: .
+      context: ..
       dockerfile: docker/Dockerfile.socket
     container_name: haymarket-socket
     restart: unless-stopped
@@ -28,13 +28,20 @@ services:
     environment:
       SOCKET_PORT: 3001
       AUTH_SECRET: ${AUTH_SECRET:-haymarket-dev-secret}
+      INTERNAL_SOCKET_SECRET: ${INTERNAL_SOCKET_SECRET:-dev-socket-secret}
+      ALLOWED_ORIGINS: http://localhost:3000
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     depends_on:
       postgres:
         condition: service_healthy
 
   app:
     build:
-      context: .
+      context: ..
       dockerfile: docker/Dockerfile
     container_name: haymarket-app
     restart: unless-stopped
@@ -43,12 +50,22 @@ services:
     environment:
       DATABASE_URL: postgresql://haymarket:haymarket@postgres:5432/haymarket
       AUTH_SECRET: ${AUTH_SECRET:-haymarket-dev-secret}
+      SETUP_SECRET: ${SETUP_SECRET:-setup-dev}
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
       NEXT_PUBLIC_SOCKET_URL: http://localhost:3001
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     depends_on:
       postgres:
+        condition: service_healthy
+      socket:
         condition: service_healthy
 
 volumes:
