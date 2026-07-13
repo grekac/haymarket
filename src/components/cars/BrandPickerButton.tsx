@@ -57,14 +57,16 @@ export function BrandPickerButton({
       ref={ref}
       type="button"
       onClick={onSelect}
-      className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-colors [content-visibility:auto] ${
+      className={`w-full flex flex-col items-center gap-1.5 p-2.5 rounded-2xl border transition-all [content-visibility:auto] ${
         selected
-          ? "border-[var(--accent)] bg-[var(--bg-hover)]"
-          : "border-[var(--border)]"
+          ? "border-[var(--accent)] bg-[var(--accent)]/8 shadow-sm ring-1 ring-[var(--accent)]/20"
+          : "border-[var(--border)] bg-[var(--bg-card)] hover:bg-[var(--bg-hover)]"
       }`}
     >
-      <BrandLogo name={brand.name} slug={brand.slug} logoUrl={brand.logoUrl} size={40} />
-      <span className="text-xs font-semibold text-center leading-tight line-clamp-2">{brand.name}</span>
+      <BrandLogo name={brand.name} slug={brand.slug} logoUrl={brand.logoUrl} size={36} />
+      <span className="text-[10px] font-semibold text-center leading-tight line-clamp-2 w-full">
+        {brand.name}
+      </span>
     </button>
   );
 }

@@ -8,7 +8,6 @@ import { SectionHeader } from "@/components/home/SectionHeader";
 import { CategoryShowcase } from "@/components/listings/CategoryShowcase";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { Plus } from "lucide-react";
-import { RecentlyViewed } from "@/components/listings/RecentlyViewed";
 import { categoryLabel } from "@/lib/category-label";
 import { getHomeCategories } from "@/lib/categories";
 import { getSiteUrl } from "@/lib/site-url";
@@ -106,8 +105,6 @@ export default async function HomePage({ params }: Props) {
           <InsightCards insights={feed.insights} />
         </section>
       )}
-
-      <RecentlyViewed />
 
       <section className="px-4 mb-8 max-w-6xl mx-auto animate-fade-up animate-delay-2">
         <SectionHeader title={t("categories")} href="/categories" />

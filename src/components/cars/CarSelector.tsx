@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Search, ChevronLeft, Check, Car } from "lucide-react";
+import { Search, ChevronLeft, Check, Car, X } from "lucide-react";
 import { formatYearRange } from "@/lib/car-catalog-utils";
 import { sortBrandsByPopularity, splitBrandsByPopularity } from "@/lib/car-logos";
 import { Input } from "@/components/ui/Input";
@@ -36,6 +36,8 @@ type Props = {
   value?: Partial<CarSelection>;
   onChange: (selection: CarSelection | null) => void;
   compact?: boolean;
+  /** filter = можно только марку; create = марка+модель, поколение необязательно */
+  mode?: "create" | "filter";
 };
 
 type Step = "brand" | "model" | "generation";
@@ -90,47 +92,6 @@ function useDebounce(value: string, ms: number) {
   return debounced;
 }
 
-function GenerationImage({
-  gen,
-  imageUrl,
-  loading,
-}: {
-  gen: Generation;
-  imageUrl: string | null;
-  loading: boolean;
-}) {
-  const title = gen.name ?? gen.code;
-
-  if (isRealCarPhoto(imageUrl)) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={imageUrl!}
-        alt={title}
-        loading="lazy"
-        decoding="async"
-        referrerPolicy="no-referrer"
-        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-      />
-    );
-  }
-
-  return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3 bg-gradient-to-br from-[var(--bg-secondary)] to-[var(--bg-hover)]">
-      {loading ? (
-        <div className="w-8 h-8 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
-      ) : (
-        <>
-          <Car className="w-10 h-10 text-[var(--text-muted)]" strokeWidth={1.5} />
-          <p className="text-xs font-bold text-center leading-tight px-1 text-[var(--text-secondary)]">
-            {title}
-          </p>
-        </>
-      )}
-    </div>
-  );
-}
-
 function GenerationCard({
   gen,
   selected,
@@ -168,32 +129,65 @@ function GenerationCard({
     <button
       type="button"
       onClick={onSelect}
-      className={`group rounded-lg border overflow-hidden text-left transition-colors ${
-        selected ? "border-[var(--accent)] ring-1 ring-[var(--accent)]" : "border-[var(--border)] hover:border-[var(--text-muted)]"
+      className={`group shrink-0 w-[148px] sm:w-[168px] rounded-2xl border overflow-hidden text-left transition-all snap-start ${
+        selected
+          ? "border-[var(--accent)] ring-2 ring-[var(--accent)]/30 shadow-md"
+          : "border-[var(--border)] hover:border-[var(--text-muted)]"
       }`}
     >
       <div className="relative aspect-[4/3] bg-[var(--bg-secondary)]">
-        <GenerationImage gen={gen} imageUrl={imageUrl} loading={loading} />
+        {isRealCarPhoto(imageUrl) ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl!}
+            alt={title}
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3 bg-gradient-to-br from-[var(--bg-secondary)] to-[var(--bg-hover)]">
+            {loading ? (
+              <div className="w-7 h-7 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
+            ) : (
+              <Car className="w-9 h-9 text-[var(--text-muted)]" strokeWidth={1.5} />
+            )}
+          </div>
+        )}
         {selected && (
           <div className="absolute top-2 right-2 w-6 h-6 bg-[var(--accent)] text-[var(--accent-fg)] rounded-full flex items-center justify-center z-10">
             <Check className="w-3.5 h-3.5" />
           </div>
         )}
       </div>
-      <div className="p-3 bg-[var(--bg-card)] space-y-0.5">
-        <p className="font-bold text-sm leading-tight">{years}</p>
-        <p className="text-sm text-[var(--text-secondary)]">{title}</p>
-        {gen.variants && gen.variants.length > 1 && (
-          <p className="text-xs text-[var(--text-muted)] pt-0.5">
-            {gen.variants.map((v) => v.label).join(" · ")}
-          </p>
-        )}
+      <div className="p-2.5 bg-[var(--bg-card)] space-y-0.5">
+        <p className="font-bold text-[13px] leading-tight">{years}</p>
+        <p className="text-[12px] text-[var(--text-secondary)] line-clamp-1">{title}</p>
       </div>
     </button>
   );
 }
 
-export function CarSelector({ value, onChange, compact }: Props) {
+function emitSelection(
+  brand: Brand,
+  model: Model | null,
+  gen: Generation | null
+): CarSelection {
+  return {
+    brand: brand.name,
+    brandId: brand.id,
+    model: model?.name ?? "",
+    modelId: model?.id ?? "",
+    generation: gen?.code ?? "",
+    generationId: gen?.id ?? "",
+    yearFrom: gen?.yearFrom ?? 1990,
+    yearTo: gen?.yearTo ?? null,
+  };
+}
+
+export function CarSelector({ value, onChange, compact, mode = "create" }: Props) {
+  const isFilter = mode === "filter";
   const [step, setStep] = useState<Step>("brand");
   const [brandSearch, setBrandSearch] = useState("");
   const [modelSearch, setModelSearch] = useState("");
@@ -294,148 +288,177 @@ export function CarSelector({ value, onChange, compact }: Props) {
     setSelectedGen(null);
     setModelSearch("");
     setStep("model");
+    if (isFilter) {
+      onChange(emitSelection(brand, null, null));
+    }
   }
 
   function selectModel(model: Model) {
+    if (!selectedBrand) return;
     setSelectedModel(model);
     setSelectedGen(null);
     setStep("generation");
+    onChange(emitSelection(selectedBrand, model, null));
   }
 
   function selectGeneration(gen: Generation) {
     setSelectedGen(gen);
     if (!selectedBrand || !selectedModel) return;
-    onChange({
-      brand: selectedBrand.name,
-      brandId: selectedBrand.id,
-      model: selectedModel.name,
-      modelId: selectedModel.id,
-      generation: gen.code,
-      generationId: gen.id,
-      yearFrom: gen.yearFrom,
-      yearTo: gen.yearTo,
-    });
+    onChange(emitSelection(selectedBrand, selectedModel, gen));
+  }
+
+  function confirmWithoutGeneration() {
+    if (!selectedBrand || !selectedModel) return;
+    setSelectedGen(null);
+    onChange(emitSelection(selectedBrand, selectedModel, null));
+  }
+
+  function clearAll() {
+    setSelectedBrand(null);
+    setSelectedModel(null);
+    setSelectedGen(null);
+    setStep("brand");
+    setBrandSearch("");
+    setModelSearch("");
+    onChange(null);
   }
 
   function goBack() {
     if (step === "generation") {
       setStep("model");
       setSelectedGen(null);
+      if (selectedBrand && selectedModel) {
+        onChange(emitSelection(selectedBrand, selectedModel, null));
+      }
     } else if (step === "model") {
       setStep("brand");
       setSelectedModel(null);
-      setSelectedBrand(null);
+      if (isFilter && selectedBrand) {
+        onChange(emitSelection(selectedBrand, null, null));
+      } else {
+        setSelectedBrand(null);
+        onChange(null);
+      }
     }
-    onChange(null);
   }
-
-  const steps: Step[] = ["brand", "model", "generation"];
 
   const breadcrumb = [
     selectedBrand?.name,
-    selectedModel?.name,
+    selectedModel?.name || (selectedBrand && isFilter ? "все модели" : null),
     selectedGen?.name ?? selectedGen?.code,
-  ].filter(Boolean).join(" → ");
+  ].filter(Boolean).join(" · ");
+
+  const hasSelection = Boolean(value?.brand || selectedBrand);
 
   return (
-    <div className={`space-y-4 ${compact ? "" : "border border-[var(--border)] rounded-lg p-4 bg-[var(--bg-card)]"}`}>
-      <div className="flex gap-1">
-        {steps.map((s, i) => (
-          <div
-            key={s}
-            className={`h-0.5 flex-1 rounded-full transition-colors ${
-              step === s
-                ? "bg-[var(--accent)]"
-                : steps.indexOf(step) > i
-                  ? "bg-[var(--text-muted)]"
-                  : "bg-[var(--border)]"
-            }`}
-          />
-        ))}
-      </div>
-
+    <div
+      className={`space-y-3 ${
+        compact
+          ? ""
+          : "border border-[var(--border)] rounded-2xl p-4 bg-[var(--bg-card)] shadow-[var(--shadow-sm)]"
+      }`}
+    >
+      {/* Summary chips — left to right */}
       <div className="flex items-center gap-2">
-        {step !== "brand" && (
-          <button type="button" onClick={goBack} className="p-2 rounded-xl hover:bg-[var(--bg-hover)] transition-colors">
-            <ChevronLeft className="w-5 h-5" />
+        <div className="flex-1 flex gap-2 overflow-x-auto scrollbar-none pb-0.5">
+          <Chip
+            active={step === "brand"}
+            filled={!!selectedBrand}
+            onClick={() => setStep("brand")}
+            label={selectedBrand?.name ?? "Марка"}
+          />
+          <Chip
+            active={step === "model"}
+            filled={!!selectedModel}
+            disabled={!selectedBrand}
+            onClick={() => selectedBrand && setStep("model")}
+            label={selectedModel?.name || (isFilter && selectedBrand ? "Все модели" : "Модель")}
+          />
+          <Chip
+            active={step === "generation"}
+            filled={!!selectedGen}
+            disabled={!selectedModel}
+            onClick={() => selectedModel && setStep("generation")}
+            label={selectedGen?.name ?? selectedGen?.code ?? "Поколение"}
+            optional
+          />
+        </div>
+        {hasSelection && (
+          <button
+            type="button"
+            onClick={clearAll}
+            className="shrink-0 p-2 rounded-full hover:bg-[var(--bg-hover)] text-[var(--text-muted)]"
+            aria-label="Сбросить"
+          >
+            <X className="w-4 h-4" />
           </button>
         )}
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-            {step === "brand" && "Шаг 1 — Марка"}
-            {step === "model" && "Шаг 2 — Модель"}
-            {step === "generation" && "Шаг 3 — Поколение"}
-          </p>
-          {breadcrumb && (
-            <p className="text-sm font-medium truncate text-[var(--text-secondary)]">{breadcrumb}</p>
-          )}
-        </div>
       </div>
 
+      {breadcrumb && (
+        <p className="text-xs text-[var(--text-muted)] truncate px-0.5">{breadcrumb}</p>
+      )}
+
       {step === "brand" && (
-        <>
+        <div className="space-y-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
             <Input
               value={brandSearch}
               onChange={(e) => setBrandSearch(e.target.value)}
               placeholder="Поиск марки..."
-              className="pl-10"
+              className="pl-10 rounded-xl"
             />
           </div>
-          {!brandSearch && allBrands.length > 0 && (
-            <p className="text-xs text-[var(--text-muted)]">
-              Сначала популярные · прокрутите вниз для всех {allBrands.length} марок
-            </p>
-          )}
           {loading && !brands.length ? (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-3">
-              {Array.from({ length: 15 }).map((_, i) => (
-                <div key={i} className="h-20 rounded-xl bg-[var(--bg-secondary)] animate-pulse" />
+            <div className="flex gap-2 overflow-hidden">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="shrink-0 w-[76px] h-[84px] rounded-xl bg-[var(--bg-secondary)] animate-pulse" />
               ))}
             </div>
           ) : brands.length === 0 ? (
-            <p className="text-sm text-center py-8 text-[var(--text-muted)]">Марка не найдена</p>
+            <p className="text-sm text-center py-6 text-[var(--text-muted)]">Марка не найдена</p>
           ) : (
-            <div className="max-h-[420px] overflow-y-auto pr-1 space-y-4">
+            <div className="space-y-3">
               {(() => {
                 const showSections = !brandSearch.trim();
                 const { popular, other } = showSections
                   ? splitBrandsByPopularity(brands)
                   : { popular: brands, other: [] as Brand[] };
 
-                const renderGrid = (items: Brand[]) => (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3">
+                const row = (items: Brand[]) => (
+                  <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none snap-x snap-mandatory">
                     {items.map((brand) => (
-                      <BrandPickerButton
-                        key={brand.id}
-                        brand={brand}
-                        selected={selectedBrand?.id === brand.id}
-                        onSelect={() => selectBrand(brand)}
-                        onLogoResolved={handleLogoResolved}
-                      />
+                      <div key={brand.id} className="shrink-0 w-[76px] snap-start">
+                        <BrandPickerButton
+                          brand={brand}
+                          selected={selectedBrand?.id === brand.id}
+                          onSelect={() => selectBrand(brand)}
+                          onLogoResolved={handleLogoResolved}
+                        />
+                      </div>
                     ))}
                   </div>
                 );
 
-                if (!showSections) return renderGrid(brands);
+                if (!showSections) return row(brands);
 
                 return (
                   <>
                     {popular.length > 0 && (
                       <div>
-                        <p className="text-xs font-semibold text-[var(--text-secondary)] mb-2 sticky top-0 bg-[var(--bg-card)] py-1 z-10">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">
                           Популярные
                         </p>
-                        {renderGrid(popular)}
+                        {row(popular)}
                       </div>
                     )}
                     {other.length > 0 && (
                       <div>
-                        <p className="text-xs font-semibold text-[var(--text-muted)] mb-2 sticky top-0 bg-[var(--bg-card)] py-1 z-10">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">
                           Все марки · {other.length}
                         </p>
-                        {renderGrid(other)}
+                        {row(other)}
                       </div>
                     )}
                   </>
@@ -443,85 +466,132 @@ export function CarSelector({ value, onChange, compact }: Props) {
               })()}
             </div>
           )}
-        </>
+        </div>
       )}
 
       {step === "model" && selectedBrand && (
-        <>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
-            <Input
-              value={modelSearch}
-              onChange={(e) => setModelSearch(e.target.value)}
-              placeholder={`Поиск модели ${selectedBrand.name}...`}
-              className="pl-10"
-            />
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={goBack}
+              className="p-2 rounded-xl hover:bg-[var(--bg-hover)] transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+              <Input
+                value={modelSearch}
+                onChange={(e) => setModelSearch(e.target.value)}
+                placeholder={`Модель ${selectedBrand.name}...`}
+                className="pl-10 rounded-xl"
+              />
+            </div>
           </div>
-          {!modelSearch && allModels.length > 0 && (
-            <p className="text-xs text-[var(--text-muted)]">
-              Выберите модель · {allModels.length} вариантов
-            </p>
+
+          {isFilter && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedModel(null);
+                setSelectedGen(null);
+                onChange(emitSelection(selectedBrand, null, null));
+              }}
+              className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
+                !selectedModel
+                  ? "bg-[var(--accent)] text-[var(--accent-fg)] border-[var(--accent)]"
+                  : "border-[var(--border)] bg-[var(--bg-card)] hover:bg-[var(--bg-hover)]"
+              }`}
+            >
+              Все модели {selectedBrand.name}
+            </button>
           )}
-          {modelSearch && (
-            <p className="text-xs text-[var(--text-muted)]">
-              Найдено · {models.length}
-            </p>
-          )}
+
           {modelsLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className="h-12 rounded-lg bg-[var(--bg-secondary)] animate-pulse" />
+            <div className="flex gap-2 overflow-x-auto scrollbar-none">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="shrink-0 h-10 w-24 rounded-full bg-[var(--bg-secondary)] animate-pulse" />
               ))}
             </div>
           ) : models.length === 0 ? (
-            <p className="text-sm text-center py-8 text-[var(--text-muted)]">
-              {modelSearch ? "Модель не найдена" : "Модели для этой марки пока не добавлены"}
+            <p className="text-sm text-center py-6 text-[var(--text-muted)]">
+              {modelSearch ? "Модель не найдена" : "Модели пока не добавлены"}
             </p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-[480px] overflow-y-auto pr-1">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none snap-x snap-mandatory">
               {models.map((model) => (
                 <button
                   key={model.id}
                   type="button"
                   onClick={() => selectModel(model)}
-                  className={`flex items-center justify-between px-3 py-3 rounded-lg border text-left transition-colors ${
+                  className={`shrink-0 snap-start px-4 py-2.5 rounded-full text-sm font-semibold border whitespace-nowrap transition-colors ${
                     selectedModel?.id === model.id
-                      ? "border-[var(--accent)] bg-[var(--bg-hover)]"
-                      : "border-[var(--border)]"
+                      ? "bg-[var(--accent)] text-[var(--accent-fg)] border-[var(--accent)]"
+                      : "border-[var(--border)] bg-[var(--bg-card)] hover:bg-[var(--bg-hover)]"
                   }`}
                 >
-                  <span className="text-sm font-semibold line-clamp-2">{model.name}</span>
-                  {selectedModel?.id === model.id && <Check className="w-4 h-4 shrink-0 ml-1" />}
+                  {model.name}
                 </button>
               ))}
             </div>
           )}
-        </>
+        </div>
       )}
 
       {step === "generation" && selectedBrand && selectedModel && (
-        <>
-          <p className="text-xs text-[var(--text-muted)]">
-            Выберите поколение · {generations.length} вариантов
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <button
+                type="button"
+                onClick={goBack}
+                className="p-2 rounded-xl hover:bg-[var(--bg-hover)] transition-colors shrink-0"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <p className="text-sm font-medium truncate">
+                {selectedBrand.name} {selectedModel.name}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={confirmWithoutGeneration}
+              className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border border-[var(--border)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)]"
+            >
+              Без поколения
+            </button>
+          </div>
+
+          <p className="text-[11px] text-[var(--text-muted)] px-0.5">
+            Поколение необязательно · листайте вправо
           </p>
+
           {generationsLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden">
+            <div className="flex gap-3 overflow-x-auto scrollbar-none">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="shrink-0 w-[148px] rounded-2xl border border-[var(--border)] overflow-hidden">
                   <div className="aspect-[4/3] bg-[var(--bg-secondary)] animate-pulse" />
-                  <div className="p-3 space-y-2">
-                    <div className="h-4 bg-[var(--bg-secondary)] rounded animate-pulse" />
-                    <div className="h-3 bg-[var(--bg-secondary)] rounded w-2/3 animate-pulse" />
+                  <div className="p-2.5 space-y-2">
+                    <div className="h-3 bg-[var(--bg-secondary)] rounded animate-pulse" />
+                    <div className="h-3 w-2/3 bg-[var(--bg-secondary)] rounded animate-pulse" />
                   </div>
                 </div>
               ))}
             </div>
           ) : generations.length === 0 ? (
-            <p className="text-sm text-center py-8 text-[var(--text-muted)]">
-              Поколения для этой модели пока не добавлены
-            </p>
+            <div className="text-center py-6 space-y-3">
+              <p className="text-sm text-[var(--text-muted)]">Поколения не найдены</p>
+              <button
+                type="button"
+                onClick={confirmWithoutGeneration}
+                className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] text-sm font-semibold"
+              >
+                Продолжить без поколения
+              </button>
+            </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[480px] overflow-y-auto pr-1">
+            <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none snap-x snap-mandatory -mx-1 px-1">
               {generations.map((gen) => (
                 <GenerationCard
                   key={gen.id}
@@ -532,8 +602,44 @@ export function CarSelector({ value, onChange, compact }: Props) {
               ))}
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
+  );
+}
+
+function Chip({
+  label,
+  active,
+  filled,
+  disabled,
+  optional,
+  onClick,
+}: {
+  label: string;
+  active?: boolean;
+  filled?: boolean;
+  disabled?: boolean;
+  optional?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={`shrink-0 max-w-[140px] truncate px-3.5 py-2 rounded-full text-[13px] font-semibold border transition-colors ${
+        filled
+          ? "bg-[var(--accent)] text-[var(--accent-fg)] border-[var(--accent)]"
+          : active
+            ? "border-[var(--accent)] bg-[var(--bg-hover)] text-[var(--text-primary)]"
+            : "border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)]"
+      } ${disabled ? "opacity-40 cursor-not-allowed" : "hover:border-[var(--text-muted)]"}`}
+    >
+      {label}
+      {optional && !filled ? (
+        <span className="ml-1 text-[10px] opacity-60 font-normal">необяз.</span>
+      ) : null}
+    </button>
   );
 }

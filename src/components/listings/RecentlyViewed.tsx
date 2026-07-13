@@ -46,7 +46,7 @@ export function RecentlyViewed() {
   if (items.length === 0) return null;
 
   return (
-    <section className="px-4 mb-8 max-w-6xl mx-auto">
+    <section className="px-4 mb-2 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-[17px] font-semibold tracking-tight">Недавно смотрели</h2>
       </div>

@@ -123,8 +123,8 @@ export function QuickCreateWizard({
     if (isCarCategory && carSelection) {
       payload.carDetails = {
         brand: carSelection.brand,
-        model: carSelection.model,
-        generation: carSelection.generation,
+        model: carSelection.model || "—",
+        generation: carSelection.generation || null,
         year: carSelection.yearTo ?? new Date().getFullYear(),
         mileage: 0,
         transmission: "Автомат",
@@ -235,7 +235,7 @@ export function QuickCreateWizard({
           )}
 
           {isCarCategory && categoryId && (
-            <CarSelector value={carSelection ?? undefined} onChange={setCarSelection} />
+            <CarSelector mode="create" value={carSelection ?? undefined} onChange={setCarSelection} />
           )}
 
           <div className="grid grid-cols-2 gap-4">
@@ -255,7 +255,7 @@ export function QuickCreateWizard({
 
           <Button
             className="w-full"
-            disabled={!categoryId || (isCarCategory && !carSelection)}
+            disabled={!categoryId || (isCarCategory && (!carSelection?.brand || !carSelection?.model))}
             onClick={() => setStep(2)}
           >
             Далее <ChevronRight className="w-4 h-4" />

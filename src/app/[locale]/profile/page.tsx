@@ -14,6 +14,7 @@ import { VerifyPhoneCard } from "@/components/profile/VerifyPhoneCard";
 import { PromotionCheckoutBanner } from "@/components/listings/PromotionCheckoutBanner";
 
 import { BackButton } from "@/components/ui/BackButton";
+import { RecentlyViewed } from "@/components/listings/RecentlyViewed";
 
 export default async function ProfilePage({
   searchParams,
@@ -64,6 +65,10 @@ export default async function ProfilePage({
       </Card>
 
       <SellerAnalytics />
+
+      <div className="-mx-4 mb-6">
+        <RecentlyViewed />
+      </div>
 
       <h2 className="font-bold mb-4">Мои объявления</h2>
       {listings.length === 0 ? (

@@ -54,6 +54,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
       generation: p.generation,
       body: p.body,
       yearFrom: p.yearFrom ? Number(p.yearFrom) : undefined,
+      yearTo: p.yearTo ? Number(p.yearTo) : undefined,
       propertyType: p.propertyType,
       dealType: p.dealType,
       rooms: p.rooms ? Number(p.rooms) : undefined,

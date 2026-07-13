@@ -106,7 +106,7 @@ export function CreateListingForm({
   }
 
   function canGoStep3() {
-    if (isCar && !carSelection) return false;
+    if (isCar && (!carSelection?.brand || !carSelection?.model)) return false;
     return true;
   }
 
@@ -188,15 +188,15 @@ export function CreateListingForm({
     };
 
     if (cat?.slug === "cars" || cat?.slug === "new-cars") {
-      if (!carSelection) {
-        setError("Выберите марку, модель и поколение автомобиля");
+      if (!carSelection?.brand || !carSelection?.model) {
+        setError("Выберите марку и модель автомобиля (поколение необязательно)");
         setLoading(false);
         return;
       }
       payload.carDetails = {
         brand: carSelection.brand,
         model: carSelection.model,
-        generation: carSelection.generation,
+        generation: carSelection.generation || null,
         year: Number(fd.get("year")),
         vin: fd.get("vin") || null,
         mileage: Number(fd.get("mileage")),
@@ -385,82 +385,81 @@ export function CreateListingForm({
               {isCar && (
         <fieldset className="space-y-4 border border-[var(--border)] rounded-2xl p-5">
           <legend className="font-bold px-2">Автомобиль</legend>
-          <CarSelector value={carSelection ?? undefined} onChange={setCarSelection} />
-          {carSelection && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={label}>Год выпуска *</label>
+          <CarSelector mode="create" value={carSelection ?? undefined} onChange={setCarSelection} />
+          {carSelection?.model && (
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
+              <div className="shrink-0 w-[128px]">
+                <label className={label}>Год *</label>
                 <Input
                   name="year"
                   type="number"
                   required
-                  min={carSelection.yearFrom}
+                  min={carSelection.yearFrom || 1980}
                   max={carSelection.yearTo ?? new Date().getFullYear()}
                   defaultValue={carSelection.yearTo ?? new Date().getFullYear()}
+                  className="rounded-xl"
                 />
+              </div>
+              <div className="shrink-0 w-[140px]">
+                <label className={label}>Пробег *</label>
+                <Input name="mileage" type="number" required min={0} className="rounded-xl" placeholder="км" />
+              </div>
+              <div className="shrink-0 w-[140px]">
+                <label className={label}>КПП *</label>
+                <select name="transmission" required className={`${selectClass} rounded-xl`}>
+                  {TRANSMISSIONS.map((t) => (
+                    <option key={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="shrink-0 w-[140px]">
+                <label className={label}>Двигатель *</label>
+                <select name="engineType" required className={`${selectClass} rounded-xl`}>
+                  {ENGINE_TYPES.map((t) => (
+                    <option key={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="shrink-0 w-[110px]">
+                <label className={label}>Объём</label>
+                <Input name="engineVolume" type="number" step="0.1" className="rounded-xl" placeholder="л" />
+              </div>
+              <div className="shrink-0 w-[110px]">
+                <label className={label}>Л.с.</label>
+                <Input name="power" type="number" className="rounded-xl" />
+              </div>
+              <div className="shrink-0 w-[130px]">
+                <label className={label}>Привод</label>
+                <select name="driveType" className={`${selectClass} rounded-xl`}>
+                  <option value="">—</option>
+                  {DRIVE_TYPES.map((t) => (
+                    <option key={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="shrink-0 w-[140px]">
+                <label className={label}>Кузов</label>
+                <select name="bodyType" className={`${selectClass} rounded-xl`}>
+                  <option value="">—</option>
+                  {BODY_TYPES.map((t) => (
+                    <option key={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="shrink-0 w-[120px]">
+                <label className={label}>Цвет</label>
+                <Input name="color" className="rounded-xl" />
+              </div>
+              <div className="shrink-0 w-[160px]">
+                <label className={label}>VIN</label>
+                <Input name="vin" className="rounded-xl" />
+              </div>
+              <div className="shrink-0 w-[110px]">
+                <label className={label}>Владельцев</label>
+                <Input name="ownersCount" type="number" min={1} className="rounded-xl" />
               </div>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={label}>Пробег (км) *</label>
-              <Input name="mileage" type="number" required min={0} />
-            </div>
-            <div>
-              <label className={label}>КПП *</label>
-              <select name="transmission" required className={selectClass}>
-                {TRANSMISSIONS.map((t) => (
-                  <option key={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={label}>Двигатель *</label>
-              <select name="engineType" required className={selectClass}>
-                {ENGINE_TYPES.map((t) => (
-                  <option key={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={label}>Объём (л)</label>
-              <Input name="engineVolume" type="number" step="0.1" />
-            </div>
-            <div>
-              <label className={label}>Мощность (л.с.)</label>
-              <Input name="power" type="number" />
-            </div>
-            <div>
-              <label className={label}>Привод</label>
-              <select name="driveType" className={selectClass}>
-                <option value="">—</option>
-                {DRIVE_TYPES.map((t) => (
-                  <option key={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={label}>Кузов</label>
-              <select name="bodyType" className={selectClass}>
-                <option value="">—</option>
-                {BODY_TYPES.map((t) => (
-                  <option key={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={label}>Цвет</label>
-              <Input name="color" />
-            </div>
-            <div>
-              <label className={label}>VIN</label>
-              <Input name="vin" />
-            </div>
-            <div>
-              <label className={label}>Владельцев</label>
-              <Input name="ownersCount" type="number" min={1} />
-            </div>
-          </div>
           <div className="flex flex-wrap gap-4 text-sm">
             <label className="flex items-center gap-2">
               <input type="checkbox" name="customsCleared" defaultChecked /> Растаможен
