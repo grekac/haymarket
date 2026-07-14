@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 
 export async function Footer() {
   const t = await getTranslations("footer");
@@ -9,11 +10,8 @@ export async function Footer() {
       <div className="max-w-6xl mx-auto px-4 py-12 md:py-14">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-10">
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-xl bg-[var(--accent)] flex items-center justify-center">
-                <span className="text-[var(--accent-fg)] text-xs font-bold">H</span>
-              </div>
-              <span className="font-semibold">HayMarket</span>
+            <div className="mb-3">
+              <BrandLogo size={32} withName />
             </div>
             <p className="text-sm text-[var(--text-muted)] max-w-xs leading-relaxed">{t("tagline")}</p>
           </div>

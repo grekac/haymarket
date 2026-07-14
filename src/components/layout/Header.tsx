@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationBell } from "./NotificationBell";
 import { LocaleSwitcher } from "./LocaleSwitcher";
+import { BrandLogo } from "./BrandLogo";
 import { Search, MessageCircle, Plus, User } from "lucide-react";
 
 export async function Header() {
@@ -16,11 +17,8 @@ export async function Header() {
       {/* Mobile top bar */}
       <header className="sticky top-0 z-40 glass border-b border-[var(--border)]/50 md:hidden">
         <div className="px-3 flex items-center gap-2 h-12">
-          <Link href="/" className="flex items-center gap-2 min-w-0 shrink-0">
-            <div className="w-8 h-8 rounded-xl bg-[var(--accent)] flex items-center justify-center shrink-0">
-              <span className="text-[var(--accent-fg)] text-[11px] font-bold">H</span>
-            </div>
-            <span className="text-[15px] font-semibold tracking-tight truncate">HayMarket</span>
+          <Link href="/" className="min-w-0 shrink-0">
+            <BrandLogo size={32} withName nameClassName="text-[15px]" />
           </Link>
 
           <div className="flex-1" />
@@ -40,11 +38,13 @@ export async function Header() {
       {/* Desktop top bar */}
       <header className="sticky top-0 z-40 glass border-b border-[var(--border)]/50 hidden md:block">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="w-9 h-9 rounded-xl bg-[var(--accent)] flex items-center justify-center shadow-[var(--shadow-sm)] transition-transform group-hover:scale-[1.03]">
-              <span className="text-[var(--accent-fg)] text-sm font-bold">H</span>
-            </div>
-            <span className="text-[16px] font-semibold tracking-tight">HayMarket</span>
+          <Link href="/" className="shrink-0 group">
+            <BrandLogo
+              size={36}
+              withName
+              nameClassName="text-[16px] transition-transform group-hover:opacity-90"
+              className="transition-transform group-hover:scale-[1.02]"
+            />
           </Link>
 
           <Link
@@ -112,7 +112,7 @@ export async function Header() {
               className="ml-1 h-9 px-3.5 rounded-full bg-[var(--accent)] text-[var(--accent-fg)] text-[13px] font-semibold inline-flex items-center gap-1.5 hover:bg-[var(--accent-hover)] active:scale-[0.98] transition-all shadow-[var(--shadow-sm)]"
             >
               <Plus className="w-4 h-4" strokeWidth={2.5} />
-              <span>{t("post")}</span>
+              <span>{t("placeAd")}</span>
             </Link>
           </nav>
         </div>

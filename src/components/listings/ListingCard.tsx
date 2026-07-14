@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin } from "lucide-react";
 import { formatPrice, formatDate, cn } from "@/lib/utils";
 import { fixMojibake } from "@/lib/text-encoding";
 import { isListingPromoted } from "@/lib/promotion";
+import { ListingFavoriteButton } from "./ListingFavoriteButton";
 
 type ListingData = {
   id: string;
@@ -23,16 +23,65 @@ type ListingData = {
 type Props = {
   listing: ListingData;
   className?: string;
-  variant?: "default" | "premium" | "horizontal";
+  variant?: "default" | "premium" | "horizontal" | "feed";
 };
 
 export function ListingCard({ listing, className, variant = "default" }: Props) {
   const image = listing.images[0]?.url;
   const categoryName = fixMojibake(listing.category.name);
+  const title = fixMojibake(listing.title);
   const top = isListingPromoted({
     isPromoted: !!listing.isPromoted,
     promotedUntil: listing.promotedUntil ?? null,
   });
+
+  if (variant === "feed") {
+    return (
+      <article className={cn("block min-w-0", className)}>
+        <Link href={`/listing/${listing.id}`} className="block group">
+          <div className="relative aspect-square rounded-xl overflow-hidden bg-[var(--bg-secondary)]">
+            {image ? (
+              <Image
+                src={image}
+                alt={title}
+                fill
+                unoptimized
+                className="object-cover"
+                sizes="(max-width:640px) 50vw, 25vw"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs text-[var(--text-muted)] px-2 text-center">
+                {categoryName}
+              </div>
+            )}
+            {top && (
+              <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/55 text-white text-[10px] font-semibold backdrop-blur-sm">
+                ТОП
+              </span>
+            )}
+          </div>
+        </Link>
+
+        <div className="pt-2 px-0.5">
+          <div className="flex items-start gap-1">
+            <Link href={`/listing/${listing.id}`} className="flex-1 min-w-0">
+              <h3 className="text-[13px] font-medium text-[var(--text-primary)] line-clamp-2 leading-snug">
+                {title}
+              </h3>
+            </Link>
+            <ListingFavoriteButton listingId={listing.id} className="shrink-0 mt-0.5" />
+          </div>
+
+          <Link href={`/listing/${listing.id}`} className="block mt-1">
+            <p className="text-[16px] font-bold tracking-tight tabular-nums leading-none">
+              {formatPrice(listing.price, listing.currency)}
+            </p>
+            <p className="text-[11px] text-[var(--text-muted)] mt-1.5 truncate">{listing.city}</p>
+          </Link>
+        </div>
+      </article>
+    );
+  }
 
   if (variant === "horizontal") {
     return (
@@ -52,11 +101,9 @@ export function ListingCard({ listing, className, variant = "default" }: Props) 
               {formatPrice(listing.price, listing.currency)}
             </p>
             <h3 className="text-[13px] text-[var(--text-secondary)] line-clamp-2 mt-1 leading-snug">
-              {listing.title}
+              {title}
             </h3>
-            <p className="text-[11px] text-[var(--text-muted)] mt-2 flex items-center gap-1">
-              <MapPin className="w-3 h-3" /> {listing.city}
-            </p>
+            <p className="text-[11px] text-[var(--text-muted)] mt-2">{listing.city}</p>
           </div>
         </div>
       </Link>
@@ -71,7 +118,7 @@ export function ListingCard({ listing, className, variant = "default" }: Props) 
             {image ? (
               <Image
                 src={image}
-                alt={listing.title}
+                alt={title}
                 fill
                 unoptimized
                 className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
@@ -93,7 +140,7 @@ export function ListingCard({ listing, className, variant = "default" }: Props) 
               {formatPrice(listing.price, listing.currency)}
             </p>
             <h3 className="text-[13px] text-[var(--text-secondary)] line-clamp-2 mt-1 leading-snug">
-              {listing.title}
+              {title}
             </h3>
             <p className="text-[11px] text-[var(--text-muted)] mt-2">{listing.city}</p>
           </div>
@@ -109,7 +156,7 @@ export function ListingCard({ listing, className, variant = "default" }: Props) 
           {image ? (
             <Image
               src={image}
-              alt={listing.title}
+              alt={title}
               fill
               unoptimized
               className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
@@ -131,10 +178,9 @@ export function ListingCard({ listing, className, variant = "default" }: Props) 
             {formatPrice(listing.price, listing.currency)}
           </p>
           <h3 className="text-sm text-[var(--text-secondary)] line-clamp-2 mt-1 leading-snug">
-            {listing.title}
+            {title}
           </h3>
           <div className="flex items-center gap-1 mt-2 text-[11px] text-[var(--text-muted)]">
-            <MapPin className="w-3 h-3" />
             <span>{listing.city}</span>
             <span className="mx-1">·</span>
             <span>{formatDate(listing.createdAt)}</span>

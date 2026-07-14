@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
-import { Home, Heart, Plus, MessageCircle, User } from "lucide-react";
+import { Home, Heart, SquarePlus, MessageCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function MobileNav() {
@@ -14,7 +14,7 @@ export function MobileNav() {
   const NAV = [
     { href: "/", icon: Home, label: t("home") },
     { href: "/favorites", icon: Heart, label: t("favorites"), badgeKey: "favorites" as const },
-    { href: "/create", icon: Plus, label: t("post"), accent: true },
+    { href: "/my", icon: SquarePlus, label: t("ads") },
     { href: "/messages", icon: MessageCircle, label: t("chats"), badgeKey: "messages" as const },
     { href: "/profile", icon: User, label: t("profile") },
   ];
@@ -38,7 +38,7 @@ export function MobileNav() {
         className="grid grid-cols-5 h-14 px-1"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        {NAV.map(({ href, icon: Icon, label, accent, badgeKey }) => {
+        {NAV.map(({ href, icon: Icon, label, badgeKey }) => {
           const active =
             href === "/"
               ? pathname === "/"
@@ -55,35 +55,16 @@ export function MobileNav() {
               )}
               aria-current={active ? "page" : undefined}
             >
-              {accent ? (
-                <span
-                  className={cn(
-                    "w-11 h-11 -mt-5 rounded-full flex items-center justify-center shadow-[var(--shadow-md)]",
-                    "bg-[var(--accent)] text-[var(--accent-fg)] active:scale-95 transition-transform",
-                    "ring-4 ring-[var(--bg-primary)]"
-                  )}
-                >
-                  <Icon className="w-5 h-5" strokeWidth={2.5} />
-                </span>
-              ) : (
-                <span className="relative">
-                  <Icon className="w-[22px] h-[22px]" strokeWidth={active ? 2.25 : 1.75} />
-                  {badge > 0 && (
-                    <span className="absolute -top-1.5 -right-2.5 min-w-[15px] h-[15px] px-1 rounded-full bg-[var(--danger)] text-white text-[9px] font-bold flex items-center justify-center leading-none">
-                      {badge > 9 ? "9+" : badge}
-                    </span>
-                  )}
-                </span>
-              )}
-              <span
-                className={cn(
-                  "text-[10px] leading-none font-medium",
-                  accent ? "text-[var(--accent)] mt-0.5" : ""
+              <span className="relative">
+                <Icon className="w-[22px] h-[22px]" strokeWidth={active ? 2.25 : 1.75} />
+                {badge > 0 && (
+                  <span className="absolute -top-1.5 -right-2.5 min-w-[15px] h-[15px] px-1 rounded-full bg-[var(--danger)] text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                    {badge > 9 ? "9+" : badge}
+                  </span>
                 )}
-              >
-                {label}
               </span>
-              {active && !accent && (
+              <span className="text-[10px] leading-none font-medium">{label}</span>
+              {active && (
                 <span className="absolute top-1 w-1 h-1 rounded-full bg-[var(--accent)]" />
               )}
             </Link>
