@@ -3,10 +3,9 @@ import NextLink from "next/link";
 import { Link } from "@/i18n/navigation";
 import { getSession } from "@/lib/auth";
 import { ThemeToggle } from "./ThemeToggle";
-import { Button } from "@/components/ui/Button";
 import { NotificationBell } from "./NotificationBell";
 import { LocaleSwitcher } from "./LocaleSwitcher";
-import { Search, MessageCircle } from "lucide-react";
+import { Search, MessageCircle, Plus, User } from "lucide-react";
 
 export async function Header() {
   const user = await getSession();
@@ -14,33 +13,35 @@ export async function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 glass border-b border-[var(--border)]/60 md:hidden">
-        <div className="px-4 flex items-center justify-between h-12">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-[12px] bg-[var(--accent)] flex items-center justify-center">
-              <span className="text-[var(--accent-fg)] text-xs font-bold">H</span>
+      {/* Mobile top bar */}
+      <header className="sticky top-0 z-40 glass border-b border-[var(--border)]/50 md:hidden">
+        <div className="px-3 flex items-center gap-2 h-12">
+          <Link href="/" className="flex items-center gap-2 min-w-0 shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-[var(--accent)] flex items-center justify-center shrink-0">
+              <span className="text-[var(--accent-fg)] text-[11px] font-bold">H</span>
             </div>
-            <span className="text-[15px] font-semibold tracking-tight">HayMarket</span>
+            <span className="text-[15px] font-semibold tracking-tight truncate">HayMarket</span>
           </Link>
-          <div className="flex items-center gap-0.5">
-            <LocaleSwitcher />
-            {user && (
-              <Link href="/messages" className="p-2 rounded-full hover:bg-[var(--bg-hover)] transition-colors">
-                <MessageCircle className="w-5 h-5 text-[var(--text-secondary)]" />
-              </Link>
-            )}
-            {user && <NotificationBell />}
-            <Link href="/search" className="p-2 rounded-full hover:bg-[var(--bg-hover)] transition-colors">
-              <Search className="w-5 h-5 text-[var(--text-secondary)]" />
-            </Link>
-          </div>
+
+          <div className="flex-1" />
+
+          <LocaleSwitcher compact />
+          {user && <NotificationBell />}
+          <Link
+            href="/search"
+            className="p-2 rounded-full hover:bg-[var(--bg-hover)] transition-colors"
+            aria-label={t("searchPlaceholder")}
+          >
+            <Search className="w-5 h-5 text-[var(--text-secondary)]" />
+          </Link>
         </div>
       </header>
 
-      <header className="sticky top-0 z-40 glass border-b border-[var(--border)]/60 hidden md:block">
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-14 gap-4">
+      {/* Desktop top bar */}
+      <header className="sticky top-0 z-40 glass border-b border-[var(--border)]/50 hidden md:block">
+        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="w-9 h-9 rounded-[14px] bg-[var(--accent)] flex items-center justify-center shadow-[var(--shadow-sm)] transition-transform duration-300 group-hover:scale-105">
+            <div className="w-9 h-9 rounded-xl bg-[var(--accent)] flex items-center justify-center shadow-[var(--shadow-sm)] transition-transform group-hover:scale-[1.03]">
               <span className="text-[var(--accent-fg)] text-sm font-bold">H</span>
             </div>
             <span className="text-[16px] font-semibold tracking-tight">HayMarket</span>
@@ -48,44 +49,70 @@ export async function Header() {
 
           <Link
             href="/search"
-            className="flex flex-1 max-w-md items-center gap-2.5 px-4 py-2.5 rounded-[18px] border border-[var(--border)] bg-[var(--bg-secondary)] text-sm text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-sm)] transition-all duration-300"
+            className="flex flex-1 max-w-xl items-center gap-2.5 mx-2 px-4 h-10 rounded-full border border-[var(--border)] bg-[var(--bg-secondary)] text-sm text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:bg-[var(--bg-card)] transition-colors"
           >
             <Search className="w-4 h-4 shrink-0" />
-            <span>{t("searchPlaceholder")}</span>
+            <span className="truncate">{t("searchPlaceholder")}</span>
           </Link>
 
-          <nav className="flex items-center gap-1 shrink-0">
-            <LocaleSwitcher className="mr-1" />
-            {user && (
-              <Link href="/messages">
-                <Button variant="ghost" size="sm">{t("messages")}</Button>
-              </Link>
-            )}
-            {user && <NotificationBell />}
+          <nav className="flex items-center gap-0.5 shrink-0">
+            <LocaleSwitcher compact />
             <ThemeToggle />
+
             {user ? (
               <>
-                <Link href="/profile">
-                  <Button variant="ghost" size="sm">{user.name.split(" ")[0]}</Button>
+                <Link
+                  href="/messages"
+                  className="p-2.5 rounded-full hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                  aria-label={t("messages")}
+                  title={t("messages")}
+                >
+                  <MessageCircle className="w-5 h-5" />
+                </Link>
+                <NotificationBell />
+                <Link
+                  href="/profile"
+                  className="ml-0.5 h-9 px-2.5 rounded-full hover:bg-[var(--bg-hover)] inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                >
+                  <span className="w-7 h-7 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] flex items-center justify-center">
+                    <User className="w-3.5 h-3.5" />
+                  </span>
+                  <span className="max-w-[88px] truncate hidden lg:inline">
+                    {user.name.split(" ")[0]}
+                  </span>
                 </Link>
                 {user.role === "ADMIN" && (
-                  <NextLink href="/admin">
-                    <Button variant="ghost" size="sm">{t("admin")}</Button>
+                  <NextLink
+                    href="/admin"
+                    className="px-2.5 py-1.5 rounded-lg text-[12px] font-semibold text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
+                  >
+                    {t("admin")}
                   </NextLink>
                 )}
               </>
             ) : (
               <>
-                <Link href="/login">
-                  <Button variant="ghost" size="sm">{t("login")}</Button>
+                <Link
+                  href="/login"
+                  className="h-9 px-3 rounded-full text-[13px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] inline-flex items-center transition-colors"
+                >
+                  {t("login")}
                 </Link>
-                <Link href="/register">
-                  <Button variant="secondary" size="sm">{t("register")}</Button>
+                <Link
+                  href="/register"
+                  className="h-9 px-3 rounded-full text-[13px] font-semibold border border-[var(--border)] hover:bg-[var(--bg-hover)] inline-flex items-center transition-colors"
+                >
+                  {t("register")}
                 </Link>
               </>
             )}
-            <Link href="/create">
-              <Button size="sm">{t("post")}</Button>
+
+            <Link
+              href="/create"
+              className="ml-1 h-9 px-3.5 rounded-full bg-[var(--accent)] text-[var(--accent-fg)] text-[13px] font-semibold inline-flex items-center gap-1.5 hover:bg-[var(--accent-hover)] active:scale-[0.98] transition-all shadow-[var(--shadow-sm)]"
+            >
+              <Plus className="w-4 h-4" strokeWidth={2.5} />
+              <span>{t("post")}</span>
             </Link>
           </nav>
         </div>

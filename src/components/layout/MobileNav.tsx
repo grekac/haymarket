@@ -21,6 +21,7 @@ export function MobileNav() {
 
   const hideOnListing = pathname.startsWith("/listing/");
   const hideOnChat = /^\/messages\/[^/]+$/.test(pathname);
+  const hideOnCreate = pathname.startsWith("/create");
 
   useEffect(() => {
     fetch("/api/nav/badges")
@@ -29,41 +30,62 @@ export function MobileNav() {
       .catch(() => {});
   }, [pathname]);
 
-  if (hideOnListing || hideOnChat) return null;
+  if (hideOnListing || hideOnChat || hideOnCreate) return null;
 
   return (
-    <nav className="app-fixed bottom-0 glass border-t border-[var(--border)]/60">
-      <div className="flex items-end justify-around h-[52px] px-2 pb-[env(safe-area-inset-bottom)]">
+    <nav className="app-fixed bottom-0 z-50 md:hidden border-t border-[var(--border)]/70 bg-[var(--bg-glass)] backdrop-blur-xl">
+      <div
+        className="grid grid-cols-5 h-14 px-1"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         {NAV.map(({ href, icon: Icon, label, accent, badgeKey }) => {
-          const active = pathname === href || (href !== "/" && pathname.startsWith(href));
+          const active =
+            href === "/"
+              ? pathname === "/"
+              : pathname === href || pathname.startsWith(`${href}/`);
           const badge = badgeKey ? badges[badgeKey] : 0;
+
           return (
             <Link
               key={href}
               href={href}
               className={cn(
-                "relative flex flex-col items-center justify-center gap-0.5 min-w-[56px] py-1 transition-all duration-200",
-                accent ? "-mt-4" : active ? "text-[var(--brand)]" : "text-[var(--text-muted)]"
+                "relative flex flex-col items-center justify-center gap-0.5 transition-colors",
+                active ? "text-[var(--accent)]" : "text-[var(--text-muted)]"
               )}
+              aria-current={active ? "page" : undefined}
             >
               {accent ? (
-                <div className="w-[52px] h-[52px] rounded-full bg-[var(--accent)] text-[var(--accent-fg)] flex items-center justify-center shadow-[var(--shadow-float)] active:scale-95 transition-transform duration-200">
-                  <Icon className="w-6 h-6" strokeWidth={2.5} />
-                </div>
+                <span
+                  className={cn(
+                    "w-11 h-11 -mt-5 rounded-full flex items-center justify-center shadow-[var(--shadow-md)]",
+                    "bg-[var(--accent)] text-[var(--accent-fg)] active:scale-95 transition-transform",
+                    "ring-4 ring-[var(--bg-primary)]"
+                  )}
+                >
+                  <Icon className="w-5 h-5" strokeWidth={2.5} />
+                </span>
               ) : (
-                <>
-                  <div className="relative">
-                    <Icon className="w-[22px] h-[22px]" strokeWidth={active ? 2.25 : 1.75} />
-                    {badge > 0 && (
-                      <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[var(--danger)] text-white text-[9px] font-bold flex items-center justify-center">
-                        {badge > 9 ? "9+" : badge}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[10px] font-medium">{label}</span>
-                </>
+                <span className="relative">
+                  <Icon className="w-[22px] h-[22px]" strokeWidth={active ? 2.25 : 1.75} />
+                  {badge > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 min-w-[15px] h-[15px] px-1 rounded-full bg-[var(--danger)] text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                      {badge > 9 ? "9+" : badge}
+                    </span>
+                  )}
+                </span>
               )}
-              {accent && <span className="text-[10px] font-medium text-[var(--brand)]">{label}</span>}
+              <span
+                className={cn(
+                  "text-[10px] leading-none font-medium",
+                  accent ? "text-[var(--accent)] mt-0.5" : ""
+                )}
+              >
+                {label}
+              </span>
+              {active && !accent && (
+                <span className="absolute top-1 w-1 h-1 rounded-full bg-[var(--accent)]" />
+              )}
             </Link>
           );
         })}

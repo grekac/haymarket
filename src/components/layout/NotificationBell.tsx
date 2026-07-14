@@ -18,15 +18,17 @@ export function NotificationBell() {
   return (
     <Link
       href="/notifications"
-      className="relative p-2 rounded-xl hover:bg-[var(--bg-hover)] transition-colors"
+      className="relative p-2 rounded-full hover:bg-[var(--bg-hover)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
       aria-label="Уведомления"
     >
       <Bell className="w-5 h-5" />
       {unread > 0 && (
-        <span className={cn(
-          "absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1",
-          "rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center"
-        )}>
+        <span
+          className={cn(
+            "absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-1",
+            "rounded-full bg-[var(--danger)] text-white text-[9px] font-bold flex items-center justify-center leading-none"
+          )}
+        >
           {unread > 9 ? "9+" : unread}
         </span>
       )}
