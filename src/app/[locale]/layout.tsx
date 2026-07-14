@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Noto_Sans_Armenian } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -15,6 +15,13 @@ import { localeAlternates } from "@/lib/seo";
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+const armenian = Noto_Sans_Armenian({
+  subsets: ["armenian"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-armenian",
   display: "swap",
 });
 
@@ -58,14 +65,16 @@ export default async function LocaleLayout({ children, params }: Props) {
   setRequestLocale(locale);
   const messages = await getMessages();
 
+  const fontStack =
+    locale === "hy"
+      ? "var(--font-armenian), var(--font-inter), system-ui, sans-serif"
+      : "var(--font-inter), var(--font-armenian), system-ui, sans-serif";
+
   return (
     <html lang={locale} data-theme="light" suppressHydrationWarning>
       <body
-        className={`${inter.variable} font-sans min-h-screen flex flex-col`}
-        style={{
-          fontFamily:
-            "var(--font-inter), -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif",
-        }}
+        className={`${inter.variable} ${armenian.variable} font-sans min-h-screen flex flex-col`}
+        style={{ fontFamily: fontStack }}
       >
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider>

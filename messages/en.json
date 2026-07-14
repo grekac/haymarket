@@ -1,0 +1,114 @@
+{
+  "meta": {
+    "title": "HayMarket — Classifieds in Armenia",
+    "description": "Buy and sell in Armenia: cars, real estate, jobs, and services"
+  },
+  "nav": {
+    "searchPlaceholder": "Search listings",
+    "messages": "Messages",
+    "login": "Log in",
+    "register": "Sign up",
+    "post": "Post",
+    "admin": "Admin",
+    "home": "Home",
+    "favorites": "Favorites",
+    "chats": "Chats",
+    "profile": "Profile"
+  },
+  "footer": {
+    "tagline": "Armenia's classifieds marketplace",
+    "cities": "Cities",
+    "sections": "Sections",
+    "categories": "Categories",
+    "search": "Search",
+    "post": "Post a listing"
+  },
+  "home": {
+    "country": "Armenia",
+    "greeting": "HayMarket",
+    "greetingUser": "Hi, {name}",
+    "forYou": "For you",
+    "categories": "Categories",
+    "newListings": "New listings",
+    "onPlatform": "{count} on the platform",
+    "noListings": "No listings yet",
+    "popularNearby": "Popular nearby",
+    "nearYerevan": "In Yerevan and around",
+    "ctaTitle": "Post a listing in 30 seconds",
+    "ctaSubtitle": "AI helps with the description and price"
+  },
+  "search": {
+    "title": "Search",
+    "allListings": "All listings",
+    "results": "{count} results",
+    "empty": "Nothing found"
+  },
+  "listing": {
+    "condition": {
+      "new": "New",
+      "used": "Used",
+      "refurbished": "Refurbished"
+    },
+    "views": "views",
+    "description": "Description",
+    "video": "Video",
+    "similar": "Similar listings",
+    "sellerChannel": "Seller profile and reviews",
+    "itemsForSale": "items for sale"
+  },
+  "common": {
+    "negotiable": "Negotiable",
+    "back": "Back",
+    "justNow": "just now",
+    "minutesAgo": "{n} min ago",
+    "hoursAgo": "{n} h ago",
+    "daysAgo": "{n} d ago",
+    "language": "Language"
+  },
+  "categories": {
+    "cars": "Cars",
+    "new-cars": "New cars",
+    "real-estate": "Real estate",
+    "electronics": "Electronics",
+    "jobs": "Jobs",
+    "services": "Services",
+    "home-furniture": "Home & furniture",
+    "clothing": "Clothing",
+    "kids": "Kids",
+    "animals": "Pets",
+    "other": "Other"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "loading": "Loading…",
+    "totalViews": "Total views",
+    "views7d": "Last 7 days",
+    "favorites": "In favorites",
+    "messages": "Messages",
+    "viewsChart": "Views over 7 days",
+    "activeListings": "{count} active",
+    "activePromotions": "{count} promotions",
+    "spent": "Spent {amount}",
+    "byListing": "By listing",
+    "viewsTotal": "views",
+    "views7dShort": "7d",
+    "promoted": "TOP"
+  },
+  "promote": {
+    "button": "Promote",
+    "active": "TOP · {days}d",
+    "modalTitle": "Promote listing",
+    "modalSubtitle": "Your listing will appear higher in search and on the home page",
+    "demoPayment": "Demo payment — connect Stripe in production",
+    "paymentNote": "Card payment via Stripe. Without a STRIPE key — demo mode.",
+    "checkoutSuccess": "Payment successful. Promotion activates within a minute.",
+    "checkoutCancel": "Payment canceled. The listing was not promoted.",
+    "cancel": "Cancel",
+    "error": "Error",
+    "packages": {
+      "basic": { "name": "Basic · 7 days", "desc": "Higher in search" },
+      "standard": { "name": "Standard · 14 days", "desc": "Longer visibility" },
+      "premium": { "name": "Premium · 30 days", "desc": "Maximum reach" }
+    }
+  }
+}

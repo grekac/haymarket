@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "HayMarket — Объявления Армении",
-    "description": "Премиальный маркетплейс покупки и продажи в Армении"
+    "description": "Покупка и продажа в Армении: авто, недвижимость, работа и услуги"
   },
   "nav": {
     "searchPlaceholder": "Поиск объявлений",
@@ -21,7 +21,7 @@
     "sections": "Разделы",
     "categories": "Категории",
     "search": "Поиск",
-    "post": "Подать"
+    "post": "Подать объявление"
   },
   "home": {
     "country": "Армения",
@@ -31,11 +31,11 @@
     "categories": "Категории",
     "newListings": "Новые объявления",
     "onPlatform": "{count} на платформе",
-    "noListings": "Объявлений пока нет на сайте.",
-    "popularNearby": "Популярные рядом",
+    "noListings": "Пока нет объявлений",
+    "popularNearby": "Популярное рядом",
     "nearYerevan": "В Ереване и окрестностях",
-    "ctaTitle": "Подать объявление за 30 сек",
-    "ctaSubtitle": "AI напишет описание и подскажет цену"
+    "ctaTitle": "Подайте объявление за 30 секунд",
+    "ctaSubtitle": "ИИ поможет с описанием и ценой"
   },
   "search": {
     "title": "Поиск",
@@ -53,7 +53,7 @@
     "description": "Описание",
     "video": "Видео",
     "similar": "Похожие",
-    "sellerChannel": "Канал продавца и отзывы",
+    "sellerChannel": "Профиль продавца и отзывы",
     "itemsForSale": "товаров в продаже"
   },
   "common": {
@@ -62,10 +62,12 @@
     "justNow": "только что",
     "minutesAgo": "{n} мин. назад",
     "hoursAgo": "{n} ч. назад",
-    "daysAgo": "{n} дн. назад"
+    "daysAgo": "{n} дн. назад",
+    "language": "Язык"
   },
   "categories": {
     "cars": "Авто",
+    "new-cars": "Новые авто",
     "real-estate": "Недвижимость",
     "electronics": "Электроника",
     "jobs": "Работа",

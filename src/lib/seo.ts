@@ -14,6 +14,7 @@ export function localeAlternates(path: string, locale: AppLocale) {
     languages: {
       hy: getSiteUrl(localizedPath(path, "hy")),
       ru: getSiteUrl(localizedPath(path, "ru")),
+      en: getSiteUrl(localizedPath(path, "en")),
       "x-default": getSiteUrl(localizedPath(path, "hy")),
     },
   };

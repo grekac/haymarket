@@ -10,10 +10,17 @@ export function LocaleSwitcher({ className }: { className?: string }) {
   const locale = useLocale() as AppLocale;
   const pathname = usePathname();
 
-  const pathWithoutLocale = pathname.replace(/^\/(hy|ru)(?=\/|$)/, "") || "/";
+  const pathWithoutLocale = pathname.replace(/^\/(hy|ru|en)(?=\/|$)/, "") || "/";
 
   return (
-    <div className={cn("flex items-center rounded-full border border-[var(--border)] p-0.5 bg-[var(--bg-secondary)]", className)}>
+    <div
+      className={cn(
+        "flex items-center rounded-full border border-[var(--border)] p-0.5 bg-[var(--bg-secondary)]",
+        className
+      )}
+      role="group"
+      aria-label="Language"
+    >
       {locales.map((l) => (
         <Link
           key={l}
