@@ -28,6 +28,7 @@ type SimilarListing = Parameters<typeof ListingCard>[0]["listing"];
 
 export type PremiumListingShellProps = {
   listingId: string;
+  articleNo?: number | null;
   title: string;
   chips: string[];
   description: string;
@@ -69,6 +70,7 @@ export type PremiumListingShellProps = {
 
 export function PremiumListingShell({
   listingId,
+  articleNo,
   title,
   chips,
   description,
@@ -114,105 +116,40 @@ export function PremiumListingShell({
 
   return (
     <div className="pb-28 md:pb-12">
-      <div className="max-w-6xl mx-auto px-4 pt-2 md:pt-4">
+      <div className="max-w-6xl mx-auto px-4 pt-0 md:pt-4">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 lg:gap-10 items-start">
-          <div className="space-y-5 min-w-0">
-            <PremiumGallery images={images} />
-
-            <p className="text-[28px] md:text-[32px] font-extrabold tracking-tight leading-none tabular-nums">
-              {formatPrice(price, currency)}
-            </p>
-
-            <div>
-              <h1 className="text-[20px] md:text-[24px] font-bold leading-snug tracking-tight">
-                {displayTitle}
-              </h1>
-              {chips.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {chips.map((c) => (
-                    <span
-                      key={c}
-                      className="px-2 py-0.5 rounded-md text-[12px] bg-[var(--bg-secondary)] text-[var(--text-secondary)]"
-                    >
-                      {c}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <ListingSellerStrip
-              sellerId={seller.id}
-              name={displayName}
-              isVerified={seller.isVerified}
-              ratingAvg={seller.ratingAvg}
-              ratingCount={seller.ratingCount}
+          <div className="min-w-0">
+            <PremiumGallery
+              images={images}
               listingId={listingId}
+              title={displayTitle}
+              price={price}
+              currency={currency}
+              isFavorited={isFavorited}
             />
 
-            <div className="lg:hidden space-y-3">
-              <ListingCallWrite listingId={listingId} phone={phone} />
-              {contactExtra}
-            </div>
+            <div className="pt-4 space-y-5">
+              <div className="space-y-2">
+                <p className="text-[28px] md:text-[32px] font-extrabold tracking-tight leading-none tabular-nums">
+                  {formatPrice(price, currency)}
+                </p>
+                <h1 className="text-[20px] md:text-[24px] font-bold leading-snug tracking-tight">
+                  {displayTitle}
+                </h1>
+                {chips.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                    {chips.map((c) => (
+                      <span
+                        key={c}
+                        className="px-2 py-0.5 rounded-md text-[12px] bg-[var(--bg-secondary)] text-[var(--text-secondary)]"
+                      >
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-            <PremiumLocationBlock
-              city={city}
-              district={district}
-              address={address}
-              latitude={latitude}
-              longitude={longitude}
-            />
-
-            {extraMain}
-            <PremiumSpecsTable sections={specSections} />
-            <ListingDescriptionClamp description={displayDescription} />
-            {videoUrl && <VideoBlock url={videoUrl} />}
-
-            <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4 md:p-5 space-y-3">
-              <h2 className="font-semibold text-base">Спросить у продавца</h2>
-              <AskSellerButton
-                listingId={listingId}
-                label="Написать продавцу"
-                className="w-full justify-center h-11"
-              />
-              <CategoryQuickMessages
-                listingId={listingId}
-                categorySlug={categorySlug}
-                presets={quickMessagePresets}
-              />
-            </section>
-
-            <PremiumAdBanner />
-            <SafetyBanner />
-            <PremiumExclusivityBadge />
-
-            {similar.length > 0 && (
-              <section className="pt-2">
-                <SectionHeader title={similarTitle} href={similarHref} />
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mt-4">
-                  {similar.map((l) => (
-                    <ListingCard key={l.id} listing={l} variant="premium" />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            <ListingMetaFooter
-              listingId={listingId}
-              createdAt={createdAt}
-              viewsTotal={viewsTotal}
-            />
-
-            <div className="pb-2">
-              <ReportButton listingId={listingId} />
-            </div>
-          </div>
-
-          <aside className="hidden lg:block space-y-4 sticky top-20">
-            <PremiumContactActions {...contactProps} />
-            {contactExtra}
-            {extraSidebar}
-            <div className="p-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]">
               <ListingSellerStrip
                 sellerId={seller.id}
                 name={displayName}
@@ -221,7 +158,79 @@ export function PremiumListingShell({
                 ratingCount={seller.ratingCount}
                 listingId={listingId}
               />
+
+              <div className="lg:hidden space-y-3">
+                <ListingCallWrite listingId={listingId} phone={phone} />
+                {contactExtra}
+              </div>
+
+              <PremiumLocationBlock
+                city={city}
+                district={district}
+                address={address}
+                latitude={latitude}
+                longitude={longitude}
+              />
+
+              {extraMain}
+              <PremiumSpecsTable sections={specSections} />
+              <ListingDescriptionClamp description={displayDescription} />
+              {videoUrl && <VideoBlock url={videoUrl} />}
+
+              <section className="space-y-3 pt-1">
+                <h2 className="font-semibold text-base">Спросить у продавца</h2>
+                <AskSellerButton
+                  listingId={listingId}
+                  label="Написать продавцу"
+                  className="w-full justify-center h-11"
+                />
+                <CategoryQuickMessages
+                  listingId={listingId}
+                  categorySlug={categorySlug}
+                  presets={quickMessagePresets}
+                />
+              </section>
+
+              <PremiumAdBanner />
+              <SafetyBanner />
+              <PremiumExclusivityBadge />
+
+              {similar.length > 0 && (
+                <section className="pt-2">
+                  <SectionHeader title={similarTitle} href={similarHref} />
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mt-4">
+                    {similar.map((l) => (
+                      <ListingCard key={l.id} listing={l} variant="premium" />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              <ListingMetaFooter
+                listingId={listingId}
+                articleNo={articleNo}
+                createdAt={createdAt}
+                viewsTotal={viewsTotal}
+              />
+
+              <div className="pb-2">
+                <ReportButton listingId={listingId} />
+              </div>
             </div>
+          </div>
+
+          <aside className="hidden lg:block space-y-4 sticky top-20">
+            <PremiumContactActions {...contactProps} />
+            {contactExtra}
+            {extraSidebar}
+            <ListingSellerStrip
+              sellerId={seller.id}
+              name={displayName}
+              isVerified={seller.isVerified}
+              ratingAvg={seller.ratingAvg}
+              ratingCount={seller.ratingCount}
+              listingId={listingId}
+            />
           </aside>
         </div>
       </div>

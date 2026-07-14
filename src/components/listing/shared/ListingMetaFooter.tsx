@@ -3,21 +3,24 @@
 import { useState } from "react";
 import { Copy, Check, Eye, Link2 } from "lucide-react";
 import { formatNumber, formatPublishedAt } from "@/lib/utils";
+import { formatListingArticle } from "@/lib/listing-article";
 
 export function ListingMetaFooter({
   listingId,
+  articleNo,
   createdAt,
   viewsTotal,
 }: {
   listingId: string;
+  articleNo?: number | null;
   createdAt: Date | string;
   viewsTotal: number;
 }) {
   const [copied, setCopied] = useState<"id" | "link" | null>(null);
-  const shortId = listingId.slice(-8).toUpperCase();
+  const article = formatListingArticle(articleNo, listingId);
 
   async function copy(kind: "id" | "link") {
-    const value = kind === "id" ? listingId : window.location.href;
+    const value = kind === "id" ? article : window.location.href;
     try {
       await navigator.clipboard.writeText(value);
       setCopied(kind);
@@ -28,18 +31,22 @@ export function ListingMetaFooter({
   }
 
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)]/60 px-4 py-3.5 space-y-2.5 text-[13px] text-[var(--text-secondary)]">
+    <div className="pt-4 space-y-2 text-[13px] text-[var(--text-secondary)]">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <span>
-          № объявления{" "}
+          Артикул{" "}
           <button
             type="button"
             onClick={() => copy("id")}
             className="font-semibold text-[var(--text-primary)] tabular-nums inline-flex items-center gap-1 hover:text-[var(--accent)]"
-            title="Скопировать номер"
+            title="Скопировать артикул"
           >
-            {shortId}
-            {copied === "id" ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 opacity-50" />}
+            {article}
+            {copied === "id" ? (
+              <Check className="w-3.5 h-3.5 text-emerald-500" />
+            ) : (
+              <Copy className="w-3.5 h-3.5 opacity-50" />
+            )}
           </button>
         </span>
         <span className="text-[var(--border)]">·</span>

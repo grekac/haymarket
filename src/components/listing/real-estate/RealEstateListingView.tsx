@@ -40,6 +40,7 @@ export function RealEstateListingView({
   return (
     <PremiumListingShell
       listingId={listing.id}
+      articleNo={listing.articleNo}
       title={listing.title}
       chips={chips}
       description={listing.description}

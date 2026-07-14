@@ -4,7 +4,6 @@ import { parseAttributes } from "@/lib/category-fields";
 import { buildAttributeSpecSections, buildListingChips } from "@/lib/listing-specs-builder";
 import { PremiumListingShell } from "@/components/listing/shared/PremiumListingShell";
 import { ServiceOrderButton } from "@/components/listing/shared/ServiceOrderButton";
-import { Card } from "@/components/ui/Card";
 
 type SimilarListing = Parameters<
   typeof import("@/components/listings/ListingCard").ListingCard
@@ -49,8 +48,8 @@ export function PremiumListingView({
 
   const extraMain =
     options.length > 0 ? (
-      <Card className="p-5 md:p-6">
-        <h2 className="font-semibold text-base mb-3">Комплектация и опции</h2>
+      <section className="space-y-3">
+        <h2 className="font-semibold text-base">Комплектация и опции</h2>
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {options.map((opt) => (
             <li key={opt} className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
@@ -59,7 +58,7 @@ export function PremiumListingView({
             </li>
           ))}
         </ul>
-      </Card>
+      </section>
     ) : null;
 
   const contactExtra = isServices ? <ServiceOrderButton listingId={listing.id} /> : null;
@@ -67,6 +66,7 @@ export function PremiumListingView({
   return (
     <PremiumListingShell
       listingId={listing.id}
+      articleNo={listing.articleNo}
       title={listing.title}
       chips={chips}
       description={listing.description}

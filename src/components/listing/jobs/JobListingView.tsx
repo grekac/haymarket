@@ -3,7 +3,6 @@ import type { CompareItem } from "@/lib/compare";
 import { parseAttributes } from "@/lib/category-fields";
 import { buildAttributeSpecSections, buildListingChips } from "@/lib/listing-specs-builder";
 import { PremiumListingShell } from "@/components/listing/shared/PremiumListingShell";
-import { Card } from "@/components/ui/Card";
 import { formatAttributeValue } from "@/lib/category-fields";
 
 type SimilarListing = Parameters<
@@ -52,52 +51,52 @@ export function JobListingView({
       {isResume ? (
         <>
           {skills && (
-            <Card className="p-5 md:p-6">
-              <h2 className="font-semibold text-base mb-3">Навыки</h2>
+            <section className="space-y-2">
+              <h2 className="font-semibold text-base">Навыки</h2>
               <p className="text-[15px] text-[var(--text-secondary)] whitespace-pre-wrap">{skills}</p>
-            </Card>
+            </section>
           )}
           {education && (
-            <Card className="p-5 md:p-6">
-              <h2 className="font-semibold text-base mb-3">Образование</h2>
+            <section className="space-y-2">
+              <h2 className="font-semibold text-base">Образование</h2>
               <p className="text-[15px] text-[var(--text-secondary)] whitespace-pre-wrap">{education}</p>
-            </Card>
+            </section>
           )}
           {portfolio && (
-            <Card className="p-5 md:p-6">
-              <h2 className="font-semibold text-base mb-3">Портфолио</h2>
+            <section className="space-y-2">
+              <h2 className="font-semibold text-base">Портфолио</h2>
               <p className="text-[15px] text-[var(--text-secondary)] whitespace-pre-wrap">{portfolio}</p>
-            </Card>
+            </section>
           )}
         </>
       ) : (
         <>
           {typeof attrs.company === "string" && attrs.company && (
-            <Card className="p-5 md:p-6 border-[var(--accent)]/20 bg-gradient-to-br from-[var(--accent)]/5 to-transparent">
+            <section className="space-y-1">
               <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Компания</p>
-              <p className="text-lg font-bold mt-1">{attrs.company}</p>
+              <p className="text-lg font-bold">{attrs.company}</p>
               {attrs.salaryNegotiable === true && (
-                <p className="text-sm text-[var(--text-secondary)] mt-2">Зарплата по договорённости</p>
+                <p className="text-sm text-[var(--text-secondary)]">Зарплата по договорённости</p>
               )}
-            </Card>
+            </section>
           )}
           {duties && (
-            <Card className="p-5 md:p-6">
-              <h2 className="font-semibold text-base mb-3">Обязанности</h2>
+            <section className="space-y-2">
+              <h2 className="font-semibold text-base">Обязанности</h2>
               <p className="text-[15px] text-[var(--text-secondary)] whitespace-pre-wrap">{duties}</p>
-            </Card>
+            </section>
           )}
           {requirements && (
-            <Card className="p-5 md:p-6">
-              <h2 className="font-semibold text-base mb-3">Требования</h2>
+            <section className="space-y-2">
+              <h2 className="font-semibold text-base">Требования</h2>
               <p className="text-[15px] text-[var(--text-secondary)] whitespace-pre-wrap">{requirements}</p>
-            </Card>
+            </section>
           )}
           {conditions && (
-            <Card className="p-5 md:p-6">
-              <h2 className="font-semibold text-base mb-3">Условия</h2>
+            <section className="space-y-2">
+              <h2 className="font-semibold text-base">Условия</h2>
               <p className="text-[15px] text-[var(--text-secondary)] whitespace-pre-wrap">{conditions}</p>
-            </Card>
+            </section>
           )}
         </>
       )}
@@ -112,6 +111,7 @@ export function JobListingView({
   return (
     <PremiumListingShell
       listingId={listing.id}
+      articleNo={listing.articleNo}
       title={listing.title}
       chips={[titleChip, ...chips.filter((c) => c !== titleChip)]}
       description={listing.description}

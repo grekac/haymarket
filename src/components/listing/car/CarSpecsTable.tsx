@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { ChevronDown, ShieldCheck, ShieldAlert } from "lucide-react";
-import { Card } from "@/components/ui/Card";
 import type { CarDetails } from "@prisma/client";
 import type { CarListingExtras } from "@/lib/car-listing-extra";
 import { getBodyConditionSummary } from "@/lib/car-listing-extra";
@@ -84,8 +83,8 @@ export function CarSpecsTable({
   const damaged = extras.bodyDamaged === true;
 
   return (
-    <Card className="p-5 md:p-6 overflow-hidden premium-card-hover animate-fade-up animate-delay-5">
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+    <section className="space-y-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-semibold text-base">Характеристики</h2>
           <p className="text-xs text-[var(--text-muted)] mt-0.5">Основные данные об автомобиле</p>
@@ -112,14 +111,14 @@ export function CarSpecsTable({
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="mt-4 w-full h-11 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:border-[var(--accent)]/30 transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
+        className="w-full h-11 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:border-[var(--accent)]/30 transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
       >
         {expanded ? "Скрыть подробности" : "Подробные характеристики"}
         <ChevronDown className={cn("w-4 h-4 transition-transform", expanded && "rotate-180")} />
       </button>
 
       {expanded && (
-        <div className="mt-5 pt-5 border-t border-[var(--border)] space-y-5 animate-fade-in">
+        <div className="pt-2 space-y-5 animate-fade-in">
           <SpecRows rows={allRows} />
           <CarBodyDiagram
             paintedParts={extras.bodyPaint}
@@ -128,7 +127,7 @@ export function CarSpecsTable({
           />
         </div>
       )}
-    </Card>
+    </section>
   );
 }
 
@@ -139,24 +138,14 @@ export function CarDamageBadge({ extras }: { extras: CarListingExtras }) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-2xl border animate-fade-up animate-delay-2",
-        damaged
-          ? "border-red-500/25 bg-gradient-to-r from-red-500/[0.06] to-transparent"
-          : "border-emerald-500/25 bg-gradient-to-r from-emerald-500/[0.06] to-transparent"
+        "flex flex-col sm:flex-row sm:items-center gap-3 py-1",
+        damaged ? "text-red-600 dark:text-red-400" : "text-emerald-700 dark:text-emerald-400"
       )}
     >
-      <div className="absolute inset-0 listing-shimmer pointer-events-none opacity-30" />
-      <div className="relative flex items-center gap-3 min-w-0">
-        <div
-          className={cn(
-            "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-300",
-            damaged ? "bg-red-500/15 text-red-600 animate-pulse-ring" : "bg-emerald-500/15 text-emerald-600"
-          )}
-        >
-          {damaged ? <ShieldAlert className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
-        </div>
+      <div className="flex items-center gap-2.5 min-w-0">
+        {damaged ? <ShieldAlert className="w-5 h-5 shrink-0" /> : <ShieldCheck className="w-5 h-5 shrink-0" />}
         <div>
-          <p className={cn("font-bold text-base", damaged ? "text-red-600 dark:text-red-400" : "text-emerald-700 dark:text-emerald-400")}>
+          <p className="font-semibold text-[15px]">
             {damaged ? "Автомобиль битый" : "Не битая"}
           </p>
           <p className="text-sm text-[var(--text-muted)] mt-0.5">

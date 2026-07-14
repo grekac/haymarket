@@ -1,4 +1,3 @@
-import { Card } from "@/components/ui/Card";
 import type { SpecSection } from "@/lib/listing-specs-builder";
 
 function SpecRows({ rows }: { rows: { label: string; value: string }[] }) {
@@ -29,12 +28,11 @@ export function PremiumSpecsTable({
   return (
     <>
       {nonEmpty.map((section) => (
-        <Card key={section.title} className="p-5 md:p-6">
-          <h2 className="font-semibold text-base mb-1">{section.title}</h2>
-          {subtitle && <p className="text-xs text-[var(--text-muted)] mb-4">{subtitle}</p>}
-          {!subtitle && <div className="mb-4" />}
+        <section key={section.title} className="space-y-2">
+          <h2 className="font-semibold text-base">{section.title}</h2>
+          {subtitle && <p className="text-xs text-[var(--text-muted)]">{subtitle}</p>}
           <SpecRows rows={section.entries} />
-        </Card>
+        </section>
       ))}
     </>
   );
@@ -64,20 +62,20 @@ export function ListingHeader({ title, chips }: { title: string; chips: string[]
 
 export function DescriptionBlock({ description }: { description: string }) {
   return (
-    <Card className="p-5 md:p-6">
-      <h2 className="font-semibold text-base mb-3">Описание</h2>
+    <section className="space-y-2">
+      <h2 className="font-semibold text-base">Описание</h2>
       <p className="text-[15px] leading-relaxed text-[var(--text-secondary)] whitespace-pre-wrap">
         {description}
       </p>
-    </Card>
+    </section>
   );
 }
 
 export function VideoBlock({ url }: { url: string }) {
   return (
-    <Card className="p-5 md:p-6">
-      <h2 className="font-semibold text-base mb-3">Видео</h2>
-      <video src={url} controls className="w-full rounded-2xl" preload="metadata" />
-    </Card>
+    <section className="space-y-2">
+      <h2 className="font-semibold text-base">Видео</h2>
+      <video src={url} controls className="w-full rounded-xl" preload="metadata" />
+    </section>
   );
 }

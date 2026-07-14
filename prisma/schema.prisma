@@ -102,6 +102,7 @@ model PhoneVerification {
 
 model Listing {
   id          String            @id @default(cuid())
+  articleNo   Int               @unique @default(autoincrement())
   title       String
   description String
   price       Int

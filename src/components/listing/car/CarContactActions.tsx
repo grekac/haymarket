@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Phone, Share2, Heart, Bell } from "lucide-react";
+import { Phone, Heart, Bell } from "lucide-react";
 import { cn, formatPrice } from "@/lib/utils";
 import { AskSellerButton } from "@/components/chat/AskSellerButton";
 import { CompareButton } from "@/components/listings/CompareButton";
@@ -46,7 +46,6 @@ export function CarContactActions({
   const [fav, setFav] = useState(initialFav);
   const [showPhone, setShowPhone] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
-  const [shared, setShared] = useState(false);
 
   useEffect(() => {
     setSubscribed(localStorage.getItem(`haymarket_sub_${sellerId}`) === "1");
@@ -74,27 +73,11 @@ export function CarContactActions({
     else localStorage.removeItem(key);
   }
 
-  async function share() {
-    const url = window.location.href;
-    const shareData = { title, text: `${title} — ${formatPrice(price, currency)}`, url };
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch {
-        /* cancelled */
-      }
-    } else {
-      await navigator.clipboard.writeText(url);
-      setShared(true);
-      setTimeout(() => setShared(false), 2000);
-    }
-  }
-
   const wrap = sticky ? "lg:sticky lg:top-20" : "";
 
   return (
     <div className={wrap}>
-      <div className="p-5 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-sm)] premium-card-hover animate-scale-in">
+      <div className="p-5 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-sm)]">
         <p className="text-[30px] md:text-[34px] font-bold tracking-tight leading-none tabular-nums text-[var(--text-primary)]">
           {formatPrice(price, currency)}
         </p>
@@ -135,15 +118,6 @@ export function CarContactActions({
               WhatsApp
             </a>
           </div>
-
-          <button
-            type="button"
-            onClick={share}
-            className="w-full h-10 rounded-xl text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] transition-colors flex items-center justify-center gap-1.5"
-          >
-            <Share2 className="w-3.5 h-3.5" />
-            {shared ? "Ссылка скопирована" : "Поделиться"}
-          </button>
         </div>
 
         <div className="flex items-center justify-between gap-1 mt-4 pt-4 border-t border-[var(--border)]">
@@ -153,7 +127,7 @@ export function CarContactActions({
             title="В избранное"
             className={cn(
               "flex-1 flex flex-col items-center gap-1 py-2 rounded-lg text-[11px] font-medium transition-colors",
-              fav ? "text-[var(--danger)]" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+              fav ? "text-red-500" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
             )}
           >
             <Heart className={cn("w-5 h-5", fav && "fill-current")} />

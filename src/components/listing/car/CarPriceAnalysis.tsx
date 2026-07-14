@@ -52,17 +52,15 @@ export function CarPriceAnalysis({
     tips.push("Хорошая ликвидность модели на рынке Армении.");
 
   return (
-    <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--bg-card)] via-[var(--accent)]/[0.03] to-[var(--bg-secondary)]/40 premium-card-hover animate-fade-up animate-delay-4">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/5 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="relative flex items-start gap-3">
-        <div className="w-11 h-11 rounded-xl bg-[var(--accent)]/12 flex items-center justify-center shrink-0">
-          <Sparkles className="w-5 h-5 text-[var(--accent)] animate-float-soft" />
+    <section className="space-y-3">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/12 flex items-center justify-center shrink-0">
+          <Sparkles className="w-5 h-5 text-[var(--accent)]" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="font-semibold text-base">AI-анализ цены</h2>
-            <span className={cn("inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full animate-scale-in", meta.bg, meta.color)}>
+            <span className={cn("inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full", meta.bg, meta.color)}>
               <meta.Icon className="w-3 h-3" />
               {meta.label}
             </span>
@@ -77,7 +75,7 @@ export function CarPriceAnalysis({
       </div>
 
       {min && max && (
-        <div className="relative mt-4">
+        <div>
           <div className="h-2 rounded-full bg-[var(--bg-secondary)] overflow-hidden">
             <div
               className={cn("h-full rounded-full transition-all duration-700 ease-out", meta.bar)}
@@ -92,19 +90,15 @@ export function CarPriceAnalysis({
       )}
 
       {tips.length > 0 && (
-        <ul className="relative mt-4 space-y-2">
+        <ul className="space-y-2">
           {tips.map((tip, i) => (
-            <li
-              key={i}
-              className="flex items-start gap-2 text-sm text-[var(--text-secondary)] animate-slide-in-right"
-              style={{ animationDelay: `${0.1 + i * 0.08}s` }}
-            >
+            <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
               <Droplets className="w-4 h-4 shrink-0 text-[var(--accent)] mt-0.5" />
               <span>{tip}</span>
             </li>
           ))}
         </ul>
       )}
-    </div>
+    </section>
   );
 }
