@@ -2,25 +2,27 @@ import type { ReactNode } from "react";
 import type { CompareItem } from "@/lib/compare";
 import type { SpecSection } from "@/lib/listing-specs-builder";
 import { fixMojibake } from "@/lib/text-encoding";
+import { formatPrice } from "@/lib/utils";
 import { SafetyBanner } from "@/components/trust/SafetyBanner";
 import { ReportButton } from "@/components/trust/ReportButton";
 import { SectionHeader } from "@/components/home/SectionHeader";
 import { ListingCard } from "@/components/listings/ListingCard";
+import { AskSellerButton } from "@/components/chat/AskSellerButton";
 import {
   PremiumGallery,
-  ListingHeader,
-  DescriptionBlock,
   VideoBlock,
   PremiumSpecsTable,
   PremiumContactActions,
   PremiumContactBarMobile,
-  PremiumSellerCard,
   PremiumLocationBlock,
-  PremiumListingStats,
   PremiumExclusivityBadge,
   PremiumAdBanner,
 } from "@/components/listing/shared";
 import { CategoryQuickMessages } from "@/components/listing/shared/CategoryQuickMessages";
+import { ListingSellerStrip } from "@/components/listing/shared/ListingSellerStrip";
+import { ListingCallWrite } from "@/components/listing/shared/ListingCallWrite";
+import { ListingDescriptionClamp } from "@/components/listing/shared/ListingDescriptionClamp";
+import { ListingMetaFooter } from "@/components/listing/shared/ListingMetaFooter";
 
 type SimilarListing = Parameters<typeof ListingCard>[0]["listing"];
 
@@ -81,9 +83,7 @@ export function PremiumListingShell({
   latitude,
   longitude,
   createdAt,
-  updatedAt,
   viewsTotal,
-  viewsToday,
   isFavorited,
   compare,
   seller,
@@ -115,19 +115,46 @@ export function PremiumListingShell({
   return (
     <div className="pb-28 md:pb-12">
       <div className="max-w-6xl mx-auto px-4 pt-2 md:pt-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 lg:gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 lg:gap-10 items-start">
           <div className="space-y-5 min-w-0">
-            <ListingHeader title={displayTitle} chips={chips} />
             <PremiumGallery images={images} />
-            <PremiumExclusivityBadge />
 
-            <div className="lg:hidden space-y-4">
-              <PremiumContactActions {...contactProps} />
+            <p className="text-[28px] md:text-[32px] font-extrabold tracking-tight leading-none tabular-nums">
+              {formatPrice(price, currency)}
+            </p>
+
+            <div>
+              <h1 className="text-[20px] md:text-[24px] font-bold leading-snug tracking-tight">
+                {displayTitle}
+              </h1>
+              {chips.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {chips.map((c) => (
+                    <span
+                      key={c}
+                      className="px-2 py-0.5 rounded-md text-[12px] bg-[var(--bg-secondary)] text-[var(--text-secondary)]"
+                    >
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <ListingSellerStrip
+              sellerId={seller.id}
+              name={displayName}
+              isVerified={seller.isVerified}
+              ratingAvg={seller.ratingAvg}
+              ratingCount={seller.ratingCount}
+              listingId={listingId}
+            />
+
+            <div className="lg:hidden space-y-3">
+              <ListingCallWrite listingId={listingId} phone={phone} />
               {contactExtra}
             </div>
 
-            {extraMain}
-            <PremiumSpecsTable sections={specSections} />
             <PremiumLocationBlock
               city={city}
               district={district}
@@ -135,64 +162,68 @@ export function PremiumListingShell({
               latitude={latitude}
               longitude={longitude}
             />
-            <DescriptionBlock description={displayDescription} />
+
+            {extraMain}
+            <PremiumSpecsTable sections={specSections} />
+            <ListingDescriptionClamp description={displayDescription} />
             {videoUrl && <VideoBlock url={videoUrl} />}
-            <PremiumListingStats
-              createdAt={createdAt}
-              updatedAt={updatedAt}
-              viewsTotal={viewsTotal}
-              viewsToday={viewsToday}
-            />
-            <CategoryQuickMessages
-              listingId={listingId}
-              categorySlug={categorySlug}
-              presets={quickMessagePresets}
-            />
+
+            <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4 md:p-5 space-y-3">
+              <h2 className="font-semibold text-base">Спросить у продавца</h2>
+              <AskSellerButton
+                listingId={listingId}
+                label="Написать продавцу"
+                className="w-full justify-center h-11"
+              />
+              <CategoryQuickMessages
+                listingId={listingId}
+                categorySlug={categorySlug}
+                presets={quickMessagePresets}
+              />
+            </section>
+
             <PremiumAdBanner />
             <SafetyBanner />
-            <ReportButton listingId={listingId} />
+            <PremiumExclusivityBadge />
 
-            <div className="lg:hidden">
-              <PremiumSellerCard
+            {similar.length > 0 && (
+              <section className="pt-2">
+                <SectionHeader title={similarTitle} href={similarHref} />
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mt-4">
+                  {similar.map((l) => (
+                    <ListingCard key={l.id} listing={l} variant="premium" />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <ListingMetaFooter
+              listingId={listingId}
+              createdAt={createdAt}
+              viewsTotal={viewsTotal}
+            />
+
+            <div className="pb-2">
+              <ReportButton listingId={listingId} />
+            </div>
+          </div>
+
+          <aside className="hidden lg:block space-y-4 sticky top-20">
+            <PremiumContactActions {...contactProps} />
+            {contactExtra}
+            {extraSidebar}
+            <div className="p-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]">
+              <ListingSellerStrip
                 sellerId={seller.id}
                 name={displayName}
                 isVerified={seller.isVerified}
                 ratingAvg={seller.ratingAvg}
                 ratingCount={seller.ratingCount}
-                activeCount={seller.activeCount}
-                sellerType={seller.type}
                 listingId={listingId}
               />
             </div>
-          </div>
-
-          <aside className="hidden lg:block space-y-4">
-            <PremiumContactActions {...contactProps} sticky />
-            {contactExtra}
-            {extraSidebar}
-            <PremiumSellerCard
-              sellerId={seller.id}
-              name={displayName}
-              isVerified={seller.isVerified}
-              ratingAvg={seller.ratingAvg}
-              ratingCount={seller.ratingCount}
-              activeCount={seller.activeCount}
-              sellerType={seller.type}
-              listingId={listingId}
-            />
           </aside>
         </div>
-
-        {similar.length > 0 && (
-          <section className="mt-12 mb-8">
-            <SectionHeader title={similarTitle} href={similarHref} />
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 mt-4">
-              {similar.map((l) => (
-                <ListingCard key={l.id} listing={l} variant="premium" />
-              ))}
-            </div>
-          </section>
-        )}
       </div>
 
       <PremiumContactBarMobile {...contactProps} />

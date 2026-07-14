@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle } from "lucide-react";
 
 const PRESETS = [
   "Ещё продаётся?",
@@ -12,9 +11,18 @@ const PRESETS = [
   "VIN можно проверить?",
 ];
 
-export function CarQuickMessages({ listingId }: { listingId: string }) {
+export function CarQuickMessages({
+  listingId,
+  presets,
+  bare,
+}: {
+  listingId: string;
+  presets?: string[];
+  bare?: boolean;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
+  const questions = presets?.length ? presets : PRESETS;
 
   async function send(text: string) {
     setLoading(text);
@@ -42,26 +50,28 @@ export function CarQuickMessages({ listingId }: { listingId: string }) {
     }
   }
 
+  const chips = (
+    <div className="flex flex-wrap gap-2">
+      {questions.map((text) => (
+        <button
+          key={text}
+          type="button"
+          disabled={!!loading}
+          onClick={() => send(text)}
+          className="px-3 py-2 rounded-full text-sm border border-[var(--border)] bg-[var(--bg-secondary)] hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/8 active:scale-[0.98] transition-all disabled:opacity-50"
+        >
+          {loading === text ? "…" : text}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (bare) return chips;
+
   return (
-    <div className="p-5 md:p-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] premium-card-hover animate-fade-up animate-delay-7">
-      <div className="flex items-center gap-2 mb-3">
-        <MessageCircle className="w-4 h-4 text-[var(--accent)] animate-float-soft" />
-        <h2 className="font-semibold text-base">Быстрые вопросы</h2>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {PRESETS.map((text, i) => (
-          <button
-            key={text}
-            type="button"
-            disabled={!!loading}
-            onClick={() => send(text)}
-            className="px-3 py-2 rounded-xl text-sm border border-[var(--border)] bg-[var(--bg-secondary)] hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/8 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 animate-scale-in"
-            style={{ animationDelay: `${i * 0.05}s` }}
-          >
-            {loading === text ? "…" : text}
-          </button>
-        ))}
-      </div>
+    <div className="space-y-3">
+      <h3 className="text-sm font-medium text-[var(--text-secondary)]">Быстрые вопросы</h3>
+      {chips}
     </div>
   );
 }

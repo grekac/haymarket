@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle } from "lucide-react";
-import { Card } from "@/components/ui/Card";
 
 const PRESETS_BY_CATEGORY: Record<string, string[]> = {
   "real-estate": [
@@ -77,11 +75,8 @@ export function CategoryQuickMessages({
   }
 
   return (
-    <Card className="p-5 md:p-6">
-      <div className="flex items-center gap-2 mb-3">
-        <MessageCircle className="w-4 h-4 text-[var(--accent)]" />
-        <h2 className="font-semibold text-base">Быстрые вопросы</h2>
-      </div>
+    <div className="space-y-2">
+      <p className="text-sm font-medium text-[var(--text-secondary)]">Быстрые вопросы</p>
       <div className="flex flex-wrap gap-2">
         {messages.map((text) => (
           <button
@@ -89,12 +84,12 @@ export function CategoryQuickMessages({
             type="button"
             disabled={!!loading}
             onClick={() => send(text)}
-            className="px-3 py-2 rounded-xl text-sm border border-[var(--border)] bg-[var(--bg-secondary)] hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/5 transition-colors disabled:opacity-50"
+            className="px-3 py-2 rounded-full text-sm border border-[var(--border)] bg-[var(--bg-secondary)] hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/8 transition-colors disabled:opacity-50"
           >
             {loading === text ? "…" : text}
           </button>
         ))}
       </div>
-    </Card>
+    </div>
   );
 }

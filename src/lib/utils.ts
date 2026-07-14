@@ -50,6 +50,18 @@ export function formatDate(date: Date | string): string {
   return d.toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
 }
 
+/** Точная дата публикации до минут — как на Авито */
+export function formatPublishedAt(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toLocaleString("ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export function formatNumber(n: number): string {
   return new Intl.NumberFormat("ru-RU").format(n);
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, X, Expand, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,28 +14,39 @@ type Props = {
 export function CarPremiumGallery({ images, className }: Props) {
   const [current, setCurrent] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
-  const [direction, setDirection] = useState<"left" | "right" | "none">("none");
+  const touchX = useRef<number | null>(null);
 
-  const go = useCallback((next: number, dir: "left" | "right") => {
-    setDirection(dir);
+  const go = useCallback((next: number) => {
     setCurrent(next);
   }, []);
 
-  const prev = () => go(current === 0 ? images.length - 1 : current - 1, "left");
-  const next = () => go(current === images.length - 1 ? 0 : current + 1, "right");
+  const prev = () => go(current === 0 ? images.length - 1 : current - 1);
+  const next = () => go(current === images.length - 1 ? 0 : current + 1);
+
+  function onTouchStart(e: React.TouchEvent) {
+    touchX.current = e.touches[0].clientX;
+  }
+
+  function onTouchEnd(e: React.TouchEvent) {
+    if (touchX.current == null || images.length < 2) return;
+    const dx = e.changedTouches[0].clientX - touchX.current;
+    touchX.current = null;
+    if (Math.abs(dx) < 40) return;
+    if (dx < 0) next();
+    else prev();
+  }
 
   if (!images.length) {
     return (
       <div
         className={cn(
-          "relative aspect-[16/10] rounded-3xl overflow-hidden",
+          "relative aspect-[4/3] md:aspect-[16/10] md:rounded-2xl overflow-hidden",
           "bg-gradient-to-br from-[var(--bg-secondary)] via-[var(--bg-card)] to-[var(--accent)]/5",
           "border border-[var(--border)] flex flex-col items-center justify-center gap-4",
-          "animate-fade-up",
           className
         )}
       >
-        <CarSilhouetteIllustration className="w-48 h-auto opacity-80 animate-float-soft" />
+        <CarSilhouetteIllustration className="w-48 h-auto opacity-80" />
         <div className="flex items-center gap-2 text-[var(--text-muted)] text-sm">
           <Camera className="w-4 h-4" />
           Фото скоро появятся
@@ -46,27 +57,22 @@ export function CarPremiumGallery({ images, className }: Props) {
 
   return (
     <>
-      <div className={cn("space-y-3 animate-fade-up", className)}>
+      <div className={cn("space-y-2", className)}>
         <div
           className={cn(
-            "relative aspect-[16/10] rounded-3xl overflow-hidden group",
-            "bg-[var(--bg-secondary)] shadow-[var(--shadow-md)]",
-            "ring-1 ring-[var(--border)]/60"
+            "relative aspect-[4/3] md:aspect-[16/10] md:rounded-2xl overflow-hidden group",
+            "bg-[var(--bg-secondary)] md:shadow-[var(--shadow-md)]",
+            "md:ring-1 md:ring-[var(--border)]/60 -mx-4 md:mx-0"
           )}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
-          <div
-            key={current}
-            className={cn(
-              "absolute inset-0 animate-gallery-fade",
-              direction === "left" && "origin-center",
-              direction === "right" && "origin-center"
-            )}
-          >
+          <div key={current} className="absolute inset-0 animate-gallery-fade">
             <Image
               src={images[current].url}
               alt=""
               fill
-              className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+              className="object-cover"
               sizes="(max-width: 1024px) 100vw, 66vw"
               quality={92}
               priority={current === 0}
@@ -74,21 +80,14 @@ export function CarPremiumGallery({ images, className }: Props) {
             />
           </div>
 
-          {/* Градиент снизу */}
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/50 via-black/20 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/45 to-transparent pointer-events-none" />
 
           {images.length > 1 && (
             <>
               <button
                 type="button"
                 onClick={prev}
-                className={cn(
-                  "absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full",
-                  "glass flex items-center justify-center",
-                  "opacity-0 group-hover:opacity-100 md:opacity-100",
-                  "transition-all duration-200 hover:scale-105 active:scale-95",
-                  "shadow-lg"
-                )}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full glass flex items-center justify-center opacity-90 hover:scale-105 active:scale-95 transition-transform shadow-lg"
                 aria-label="Предыдущее фото"
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -96,13 +95,7 @@ export function CarPremiumGallery({ images, className }: Props) {
               <button
                 type="button"
                 onClick={next}
-                className={cn(
-                  "absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full",
-                  "glass flex items-center justify-center",
-                  "opacity-0 group-hover:opacity-100 md:opacity-100",
-                  "transition-all duration-200 hover:scale-105 active:scale-95",
-                  "shadow-lg"
-                )}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full glass flex items-center justify-center opacity-90 hover:scale-105 active:scale-95 transition-transform shadow-lg"
                 aria-label="Следующее фото"
               >
                 <ChevronRight className="w-5 h-5" />
@@ -113,53 +106,33 @@ export function CarPremiumGallery({ images, className }: Props) {
           <button
             type="button"
             onClick={() => setFullscreen(true)}
-            className={cn(
-              "absolute top-3 right-3 w-10 h-10 rounded-xl glass flex items-center justify-center",
-              "opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-105"
-            )}
+            className="absolute top-3 right-3 w-9 h-9 rounded-xl glass flex items-center justify-center"
             aria-label="На весь экран"
           >
             <Expand className="w-4 h-4" />
           </button>
 
-          <div className="absolute bottom-3 left-3 px-3 py-1.5 rounded-full glass text-xs font-semibold tabular-nums">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full glass text-xs font-semibold tabular-nums">
             {current + 1} / {images.length}
           </div>
-
-          {images.length > 1 && (
-            <div className="absolute bottom-3 right-3 flex gap-1 md:hidden">
-              {images.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => go(i, i > current ? "right" : "left")}
-                  className={cn(
-                    "h-1.5 rounded-full transition-all duration-300",
-                    i === current ? "w-5 bg-white" : "w-1.5 bg-white/40"
-                  )}
-                  aria-label={`Фото ${i + 1}`}
-                />
-              ))}
-            </div>
-          )}
         </div>
 
         {images.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none snap-x">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x">
             {images.map((img, i) => (
               <button
                 key={i}
                 type="button"
-                onClick={() => go(i, i > current ? "right" : "left")}
+                onClick={() => go(i)}
                 className={cn(
-                  "relative shrink-0 w-[76px] h-[56px] rounded-xl overflow-hidden snap-start",
-                  "border-2 transition-all duration-300 ease-out",
+                  "relative shrink-0 w-[64px] h-[48px] rounded-lg overflow-hidden snap-start",
+                  "border-2 transition-all",
                   i === current
-                    ? "border-[var(--accent)] ring-2 ring-[var(--accent)]/25 scale-105 shadow-md"
-                    : "border-transparent opacity-65 hover:opacity-100 hover:scale-[1.02]"
+                    ? "border-[var(--accent)]"
+                    : "border-transparent opacity-70 hover:opacity-100"
                 )}
               >
-                <Image src={img.url} alt="" fill className="object-cover" sizes="76px" unoptimized />
+                <Image src={img.url} alt="" fill className="object-cover" sizes="64px" unoptimized />
               </button>
             ))}
           </div>
@@ -168,12 +141,14 @@ export function CarPremiumGallery({ images, className }: Props) {
 
       {fullscreen && (
         <div
-          className="fixed inset-0 z-[100] bg-black/96 flex items-center justify-center animate-fade-in backdrop-blur-sm"
+          className="fixed inset-0 z-[100] bg-black/96 flex items-center justify-center animate-fade-in"
           onClick={() => setFullscreen(false)}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
           <button
             type="button"
-            className="absolute top-5 right-5 w-11 h-11 rounded-full glass text-white flex items-center justify-center hover:scale-105 transition-transform z-10"
+            className="absolute top-5 right-5 w-11 h-11 rounded-full glass text-white flex items-center justify-center z-10"
             onClick={() => setFullscreen(false)}
           >
             <X className="w-6 h-6" />
@@ -183,7 +158,7 @@ export function CarPremiumGallery({ images, className }: Props) {
               src={images[current].url}
               alt=""
               fill
-              className="object-contain p-8 md:p-12"
+              className="object-contain p-6 md:p-12"
               sizes="100vw"
               quality={100}
               unoptimized
@@ -197,7 +172,7 @@ export function CarPremiumGallery({ images, className }: Props) {
                   e.stopPropagation();
                   prev();
                 }}
-                className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full glass text-white flex items-center justify-center hover:scale-105 transition-transform"
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full glass text-white flex items-center justify-center"
               >
                 <ChevronLeft className="w-7 h-7" />
               </button>
@@ -207,7 +182,7 @@ export function CarPremiumGallery({ images, className }: Props) {
                   e.stopPropagation();
                   next();
                 }}
-                className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full glass text-white flex items-center justify-center hover:scale-105 transition-transform"
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full glass text-white flex items-center justify-center"
               >
                 <ChevronRight className="w-7 h-7" />
               </button>

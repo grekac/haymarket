@@ -1,16 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin } from "lucide-react";
+import { MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const BOUNDS = { minLat: 38.8, maxLat: 41.3, minLng: 43.4, maxLng: 46.6 };
-
-function toPercent(lat: number, lng: number) {
-  const x = ((lng - BOUNDS.minLng) / (BOUNDS.maxLng - BOUNDS.minLng)) * 100;
-  const y = ((BOUNDS.maxLat - lat) / (BOUNDS.maxLat - BOUNDS.minLat)) * 100;
-  return { x, y };
-}
 
 export function CarLocationBlock({
   city,
@@ -29,45 +21,56 @@ export function CarLocationBlock({
   const hasCoords = latitude != null && longitude != null;
   const label = [city, district, address].filter(Boolean).join(", ");
 
+  const osmEmbed =
+    hasCoords
+      ? `https://www.openstreetmap.org/export/embed.html?bbox=${longitude! - 0.02}%2C${latitude! - 0.015}%2C${longitude! + 0.02}%2C${latitude! + 0.015}&layer=mapnik&marker=${latitude}%2C${longitude}`
+      : null;
+
   return (
-    <div className="p-5 md:p-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] premium-card-hover animate-fade-up animate-delay-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="font-semibold text-base">Расположение</h2>
-          <p className="text-sm text-[var(--text-secondary)] mt-1 flex items-center gap-1.5">
-            <MapPin className="w-4 h-4 shrink-0 text-[var(--accent)]" />
-            {label}
-          </p>
-        </div>
-        {hasCoords && (
+    <section className="space-y-3">
+      <h2 className="font-semibold text-base">Местоположение</h2>
+      <p className="text-[15px] text-[var(--text-secondary)] flex items-start gap-2">
+        <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-[var(--accent)]" />
+        <span>{label}</span>
+      </p>
+
+      {hasCoords && osmEmbed && (
+        <>
           <button
             type="button"
             onClick={() => setShowMap((v) => !v)}
-            className="text-sm font-medium text-[var(--accent)] hover:underline shrink-0"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent)] hover:underline"
           >
-            {showMap ? "Скрыть карту" : "Показать на карте"}
+            Узнать подробности
+            {showMap ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
-        )}
-      </div>
 
-      {showMap && hasCoords && (
-        <div
-          className={cn(
-            "relative mt-4 aspect-[16/9] rounded-xl overflow-hidden border border-[var(--border)]",
-            "bg-gradient-to-br from-emerald-50 to-sky-50 dark:from-emerald-950/30 dark:to-sky-950/30 animate-fade-in"
+          {showMap && (
+            <div
+              className={cn(
+                "relative aspect-[16/10] rounded-2xl overflow-hidden border border-[var(--border)]",
+                "bg-[var(--bg-secondary)] animate-fade-in shadow-[var(--shadow-sm)]"
+              )}
+            >
+              <iframe
+                title="Карта расположения"
+                src={osmEmbed}
+                className="absolute inset-0 w-full h-full border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+              <a
+                href={`https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg text-[11px] font-medium glass"
+              >
+                Открыть карту
+              </a>
+            </div>
           )}
-        >
-          <div className="absolute inset-0 opacity-25 bg-[url('https://tile.openstreetmap.org/6/38/24.png')] bg-cover" />
-          <span
-            className="absolute w-5 h-5 rounded-full bg-[var(--accent)] border-2 border-white shadow-lg animate-pulse-ring"
-            style={{
-              left: `${toPercent(latitude!, longitude!).x}%`,
-              top: `${toPercent(latitude!, longitude!).y}%`,
-              transform: "translate(-50%, -50%)",
-            }}
-          />
-        </div>
+        </>
       )}
-    </div>
+    </section>
   );
 }
