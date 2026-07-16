@@ -51,18 +51,18 @@
 - [x] Оплата полного отчёта (990 / 2490 AMD draft)
 - [x] Статус unlock → `PAID`, enrichment только владельцу; FREE-кэш не шарит PAID
 - [x] Build / reviews / фиксы
-- [ ] Коммит поимённо
-- [ ] Фаза «готово»
-
-**Дефолты Phase 2:** demo unlock только non-prod или `ALLOW_DEMO_PAYMENTS=true`; Stripe webhook `metadata.type=vehicle_history`.
+- [x] Коммит поимённо (`f03ec24`)
+- [x] Фаза «готово» (live API всё ещё blocked без Postgres)
 
 ---
 
 ## Phase 3 — ЛК + Админка
 
-- [ ] «Мои отчёты» в профиле (`/api/vehicle-history/my` + UI)
-- [ ] Админ: audit log, partner keys, счётчики lookups
-- [ ] Build / live / reviews / commit
+- [x] «Мои отчёты» в профиле (`/api/vehicle-history/my` + UI)
+- [x] Админ: audit log, partner keys, счётчики lookups
+- [x] Build / reviews / фиксы
+- [ ] Коммит поимённо
+- [ ] Фаза «готово»
 
 ---
 

@@ -9,6 +9,7 @@ import { VerifiedBadge, RatingStars } from "@/components/trust/VerifiedBadge";
 import { PromoteButton } from "@/components/listings/PromoteButton";
 import { MyListingActions } from "@/components/listings/MyListingActions";
 import { SellerAnalytics } from "@/components/seller/SellerAnalytics";
+import { MyVehicleReports } from "@/components/vehicle-history/MyVehicleReports";
 import { VerifyPhoneCard } from "@/components/profile/VerifyPhoneCard";
 
 import { PromotionCheckoutBanner } from "@/components/listings/PromotionCheckoutBanner";
@@ -60,11 +61,14 @@ export default async function ProfilePage({
           <Link href="/saved-searches" className="text-[var(--text-secondary)] hover:underline">Сохранённые поиски</Link>
           <Link href="/notifications" className="text-[var(--text-secondary)] hover:underline">Уведомления</Link>
           <Link href="/messages" className="text-[var(--text-secondary)] hover:underline">Чат</Link>
+          <a href="#haypass" className="text-[var(--text-secondary)] hover:underline">Отчёты HayPass</a>
           <span className="text-[var(--text-muted)]">{listings.length} объявлений</span>
         </div>
       </Card>
 
       <SellerAnalytics />
+
+      <MyVehicleReports />
 
       <div className="-mx-4 mb-6">
         <RecentlyViewed />

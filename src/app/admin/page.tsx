@@ -8,6 +8,7 @@ import { AdminCategories } from "@/components/admin/AdminCategories";
 import { AdminCategoryFields } from "@/components/admin/AdminCategoryFields";
 import { AdminAnalytics } from "@/components/admin/AdminAnalytics";
 import { AdminReports } from "@/components/admin/AdminReports";
+import { AdminHayPass } from "@/components/admin/AdminHayPass";
 
 export default async function AdminPage() {
   const user = await getSession();
@@ -37,6 +38,7 @@ export default async function AdminPage() {
       <AdminAnalytics />
       <AdminListings />
       <AdminReports />
+      <AdminHayPass />
       <AdminCategories />
       <div className="mt-10">
         <AdminCategoryFields
