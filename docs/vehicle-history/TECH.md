@@ -20,6 +20,10 @@ Fingerprint: `sha256(normalized query)` для дедупа/кэша.
 ### Partner
 
 - `POST /api/v1/partner/vehicle-history/lookup` header `X-Api-Key`
+- Body: `{ query, type?: VIN|PLATE|CHASSIS, listingId? }`
+- Rate limit: `partner.rateLimit` requests per minute → `429` when exceeded
+- Key management: `/admin` HayPass (`AdminHayPass`) — one-time key reveal on create
+- Full reference: [PARTNER_API.md](./PARTNER_API.md)
 
 ## Report JSON shape
 
