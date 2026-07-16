@@ -87,6 +87,8 @@ model User {
   notifications   Notification[]
   reports         Report[]
   promotionOrders PromotionOrder[]
+  vehicleLookups  VehicleHistoryLookup[]
+  vehicleReports  VehicleHistoryReport[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 }
@@ -368,4 +370,85 @@ model CategoryFieldSchema {
   layoutType String   @default("premium")
   updatedAt  DateTime @updatedAt
   createdAt  DateTime @default(now())
+}
+
+enum VehicleQueryType {
+  VIN
+  PLATE
+  CHASSIS
+}
+
+enum VehicleReportStatus {
+  PENDING
+  READY
+  FAILED
+}
+
+enum VehiclePaymentStatus {
+  FREE
+  UNPAID
+  PAID
+}
+
+model VehicleHistoryLookup {
+  id          String          @id @default(cuid())
+  queryType   VehicleQueryType
+  queryRaw    String
+  queryNorm   String
+  fingerprint String
+  userId      String?
+  user        User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  listingId   String?
+  ipHash      String?
+  reportId    String?
+  report      VehicleHistoryReport? @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  createdAt   DateTime        @default(now())
+
+  @@index([fingerprint])
+  @@index([userId])
+  @@index([reportId])
+  @@index([createdAt])
+}
+
+model VehicleHistoryReport {
+  id            String               @id @default(cuid())
+  fingerprint   String
+  queryType     VehicleQueryType
+  queryNorm     String
+  status        VehicleReportStatus  @default(PENDING)
+  paymentStatus VehiclePaymentStatus @default(FREE)
+  summaryJson   String
+  payloadJson   String
+  userId        String?
+  user          User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  listingId     String?
+  lookups       VehicleHistoryLookup[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@index([fingerprint])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model VehicleHistoryPartnerKey {
+  id         String   @id @default(cuid())
+  name       String
+  keyHash    String   @unique
+  keyPrefix  String
+  isActive   Boolean  @default(true)
+  rateLimit  Int      @default(60)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model VehicleHistoryAuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  actorId   String?
+  metaJson  String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
 }

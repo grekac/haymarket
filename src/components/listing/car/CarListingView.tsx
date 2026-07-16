@@ -26,6 +26,7 @@ import { ListingCallWrite } from "@/components/listing/shared/ListingCallWrite";
 import { ListingDescriptionClamp } from "@/components/listing/shared/ListingDescriptionClamp";
 import { ListingMetaFooter } from "@/components/listing/shared/ListingMetaFooter";
 import { AskSellerButton } from "@/components/chat/AskSellerButton";
+import { CheckHistoryButton } from "@/components/vehicle-history/CheckHistoryButton";
 
 type SimilarListing = Parameters<typeof ListingCard>[0]["listing"];
 
@@ -60,6 +61,14 @@ export function CarListingView({
   const title = buildCarListingTitle(car, extras, fixMojibake(listing.title));
   const chips = buildCarSubtitleChips(car);
   const sellerName = fixMojibake(listing.user.name);
+
+  let plateFromAttrs: string | null = null;
+  try {
+    const raw = listing.attributes ? JSON.parse(listing.attributes) : null;
+    if (raw && typeof raw.plateNumber === "string") plateFromAttrs = raw.plateNumber;
+  } catch {
+    /* ignore */
+  }
 
   return (
     <div className="pb-28 md:pb-12">
@@ -107,8 +116,14 @@ export function CarListingView({
                 listingId={listing.id}
               />
 
-              <div className="lg:hidden">
+              <div className="lg:hidden space-y-2.5">
                 <ListingCallWrite listingId={listing.id} phone={listing.user.phone} />
+                <CheckHistoryButton
+                  listingId={listing.id}
+                  vin={car.vin}
+                  plate={plateFromAttrs}
+                  className="w-full"
+                />
               </div>
 
               <CarLocationBlock
@@ -188,6 +203,12 @@ export function CarListingView({
               isFavorited={isFavorited}
               compare={compare}
               sellerId={listing.user.id}
+            />
+            <CheckHistoryButton
+              listingId={listing.id}
+              vin={car.vin}
+              plate={plateFromAttrs}
+              className="w-full"
             />
             <ListingSellerStrip
               sellerId={listing.user.id}
