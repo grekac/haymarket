@@ -52,7 +52,7 @@ sequenceDiagram
 ## Target scale stack (roadmap)
 
 MVP: Next API + Prisma + Postgres (current).  
-Scale: Redis cache, BullMQ queue for slow providers, S3 PDF export, Elasticsearch for plate/VIN search, Nest worker process.
+Scale: optional Upstash Redis (`vh:fp:{fingerprint}`, FREE merge only, TTL 1h), BullMQ for slow providers, S3 PDF export, Elasticsearch for plate/VIN search, Nest worker process.
 
 ## Security
 
@@ -61,11 +61,14 @@ Scale: Redis cache, BullMQ queue for slow providers, S3 PDF export, Elasticsearc
 - PII (owner names) never in free preview
 - Audit log of who requested what
 - No secrets in client
+- Redis fingerprint cache stores FREE provider-merge JSON only — never PAID payloads for cross-user reuse
 
 ## Roadmap
 
-1. **MVP (now):** search UI, report shell, VIN decode, HayMarket matches, CTA on listing, schema, docs  
-2. **Billing:** paid unlock of full report  
-3. **Provider contracts:** customs / insurance / police B2B  
-4. **Partner API v1 GA** + SLA  
-5. **PDF export + Redis/queues**
+1. [x] **MVP:** search UI, report shell, VIN decode, HayMarket matches, CTA on listing, schema, docs  
+2. [x] **Billing:** paid unlock of full report (owner-only enrichment)  
+3. [x] **Admin + ЛК:** my reports, audit log, partner keys, lookup stats  
+4. [x] **Partner API docs** + stub / key management UI  
+5. [x] **Print / PDF:** HTML `window.print()` on report view  
+6. [~] **Redis cache hook:** optional Upstash FREE fingerprint cache before DB create (queues / S3 PDF later)  
+7. [ ] **Provider contracts:** customs / insurance / police B2B  

@@ -68,17 +68,23 @@
 
 ## Phase 4 — Partner API GA
 
-- [ ] Документация Partner API, rate limit, key management UI/seed
-- [ ] Build / live / reviews / commit
+- [x] Документация Partner API, rate limit, key management UI (`PARTNER_API.md` + ссылка в `TECH.md`)
+- [x] Build / live / reviews
+- [x] Коммит поимённо
+
+**Файлы фазы (docs):**
+- `docs/vehicle-history/PARTNER_API.md` (NEW)
+- `docs/vehicle-history/TECH.md` (ссылка/секция Partner)
+- `docs/vehicle-history/ORCHESTRATION_PLAN.md` (этот чеклист)
 
 ---
 
 ## Phase 5 — Scale readiness (без внешних контрактов)
 
-- [ ] PDF export stub или HTML print
-- [ ] Redis cache hook (optional env)
-- [ ] Docs roadmap update
-- [ ] Build / live / reviews / commit
+- [x] PDF export stub или HTML print (`Печать / PDF` → `window.print()`, `print:` styles)
+- [x] Redis cache hook (optional env): `vh:fp:{fingerprint}` FREE merge only, TTL 1h; miss → providers → DB create
+- [x] Docs roadmap update (`ARCHITECTURE.md`)
+- [x] Build / live / reviews / commit
 
 ---
 
@@ -95,3 +101,5 @@
 | 2026-07-16 | Phase 1 commit `0c6b977`. Live API blocked: нет локального Postgres/Docker. |
 | 2026-07-16 | Phase 2 старт. Дефолт: FREE базовый отчёт; unlock full 2490 AMD (demo/Stripe); enrichment только после PAID; без фейковых verified ДТП. |
 | 2026-07-16 | Phase 3 commit: HayPass profile reports + admin monitoring (stats, audit, partner keys). |
+| 2026-07-16 | Phase 5: HTML print + optional Redis FREE fingerprint cache; roadmap updated; build OK; committed. |
+| 2026-07-16 | Phase 4 docs: `PARTNER_API.md` (endpoint, X-Api-Key, responses, rateLimit, AdminHayPass one-time reveal, no-SLA note). Committed. |

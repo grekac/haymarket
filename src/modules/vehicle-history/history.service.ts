@@ -13,6 +13,53 @@ function hashIp(ip?: string | null) {
   return createHash("sha256").update(ip).digest("hex").slice(0, 32);
 }
 
+/** Optional Upstash Redis — only when UPSTASH_REDIS_REST_URL is set. Never caches PAID. */
+async function getRedis(): Promise<import("@upstash/redis").Redis | null> {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return null;
+  }
+  try {
+    const { Redis } = await import("@upstash/redis");
+    return Redis.fromEnv();
+  } catch {
+    return null;
+  }
+}
+
+type FreeFingerprintCache = {
+  summaryJson: string;
+  payloadJson: string;
+};
+
+const REDIS_FP_TTL_SEC = 3600;
+
+function redisFingerprintKey(fingerprint: string) {
+  return `vh:fp:${fingerprint}`;
+}
+
+/** FREE provider-merge cache only — speeds rebuild before DB write; never PAID. */
+async function getFreeFingerprintCache(fingerprint: string): Promise<FreeFingerprintCache | null> {
+  const redis = await getRedis();
+  if (!redis) return null;
+  try {
+    const hit = await redis.get<FreeFingerprintCache>(redisFingerprintKey(fingerprint));
+    if (!hit?.summaryJson || !hit?.payloadJson) return null;
+    return hit;
+  } catch {
+    return null;
+  }
+}
+
+async function setFreeFingerprintCache(fingerprint: string, value: FreeFingerprintCache): Promise<void> {
+  const redis = await getRedis();
+  if (!redis) return;
+  try {
+    await redis.set(redisFingerprintKey(fingerprint), value, { ex: REDIS_FP_TTL_SEC });
+  } catch {
+    // optional cache — ignore failures
+  }
+}
+
 const REGISTRY_NOTE =
   "Официальные реестры Армении пока не подключены. Секция — чеклист готовности, не результат проверки.";
 
@@ -203,13 +250,26 @@ export async function createVehicleHistoryReport(input: {
     return existing;
   }
 
-  const payload = await buildHistoryPayload(input.query, type);
-  const summary = {
-    make: payload.vehicle.make ?? null,
-    model: payload.vehicle.model ?? null,
-    year: payload.vehicle.year ?? null,
-    sectionStatuses: Object.fromEntries(payload.sections.map((s) => [s.id, s.status])),
-  };
+  // Optional Redis (1h): FREE fingerprint merge only — still create a new DB FREE report.
+  // Never store/serve PAID payloads via Redis.
+  let summaryJson: string;
+  let payloadJson: string;
+  const redisHit = await getFreeFingerprintCache(fingerprint);
+  if (redisHit) {
+    summaryJson = redisHit.summaryJson;
+    payloadJson = redisHit.payloadJson;
+  } else {
+    const payload = await buildHistoryPayload(input.query, type);
+    const summary = {
+      make: payload.vehicle.make ?? null,
+      model: payload.vehicle.model ?? null,
+      year: payload.vehicle.year ?? null,
+      sectionStatuses: Object.fromEntries(payload.sections.map((s) => [s.id, s.status])),
+    };
+    summaryJson = JSON.stringify(summary);
+    payloadJson = JSON.stringify(payload);
+    await setFreeFingerprintCache(fingerprint, { summaryJson, payloadJson });
+  }
 
   const report = await prisma.vehicleHistoryReport.create({
     data: {
@@ -218,8 +278,8 @@ export async function createVehicleHistoryReport(input: {
       queryNorm: normalized,
       status: "READY",
       paymentStatus: "FREE",
-      summaryJson: JSON.stringify(summary),
-      payloadJson: JSON.stringify(payload),
+      summaryJson,
+      payloadJson,
       userId: input.userId || null,
       listingId: input.listingId || null,
     },
