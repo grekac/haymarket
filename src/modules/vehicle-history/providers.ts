@@ -82,10 +82,10 @@ export const haymarketInternalProvider: VehicleHistoryProvider = {
       where: {
         status: "ACTIVE",
         OR: [
-          { carDetails: { is: { vin: { equals: normalized, mode: "insensitive" } } } },
+          { carDetails: { is: { vin: { equals: normalized, mode: "insensitive" as const } } } },
           ...attributeOr,
           // VIN may appear in title; plates must not match via title substring.
-          ...(isPlate ? [] : [{ title: { contains: normalized, mode: "insensitive" } }]),
+          ...(isPlate ? [] : [{ title: { contains: normalized, mode: "insensitive" as const } }]),
         ],
       },
       take: isPlate ? 100 : 20,

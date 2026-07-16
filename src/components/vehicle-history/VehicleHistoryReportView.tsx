@@ -1,6 +1,8 @@
 import { Link } from "@/i18n/navigation";
+import { CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { HistoryPayload, SectionStatus } from "@/modules/vehicle-history/normalize";
+import { UnlockReportButton } from "@/components/vehicle-history/UnlockReportButton";
 
 const STATUS_LABEL: Record<SectionStatus, string> = {
   verified: "Проверено",
@@ -19,10 +21,14 @@ const STATUS_CLASS: Record<SectionStatus, string> = {
 export function VehicleHistoryReportView({
   reportId,
   payload,
+  paymentStatus,
 }: {
   reportId: string;
   payload: HistoryPayload;
+  paymentStatus: "FREE" | "UNPAID" | "PAID";
 }) {
+  const showUnlock = paymentStatus === "FREE" || paymentStatus === "UNPAID";
+
   return (
     <div className="space-y-6">
       <header className="space-y-2">
@@ -37,6 +43,17 @@ export function VehicleHistoryReportView({
           <p className="text-[16px] font-semibold">
             {[payload.vehicle.make, payload.vehicle.model, payload.vehicle.year].filter(Boolean).join(" · ")}
           </p>
+        )}
+        {paymentStatus === "PAID" && (
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Полный отчёт оплачен
+          </span>
+        )}
+        {showUnlock && (
+          <div className="pt-1">
+            <UnlockReportButton reportId={reportId} />
+          </div>
         )}
       </header>
 

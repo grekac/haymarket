@@ -411,20 +411,22 @@ model VehicleHistoryLookup {
 }
 
 model VehicleHistoryReport {
-  id            String               @id @default(cuid())
-  fingerprint   String
-  queryType     VehicleQueryType
-  queryNorm     String
-  status        VehicleReportStatus  @default(PENDING)
-  paymentStatus VehiclePaymentStatus @default(FREE)
-  summaryJson   String
-  payloadJson   String
-  userId        String?
-  user          User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
-  listingId     String?
-  lookups       VehicleHistoryLookup[]
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
+  id              String               @id @default(cuid())
+  fingerprint     String
+  queryType       VehicleQueryType
+  queryNorm       String
+  status          VehicleReportStatus  @default(PENDING)
+  paymentStatus   VehiclePaymentStatus @default(FREE)
+  paidPackage     String?
+  stripeSessionId String?              @unique
+  summaryJson     String
+  payloadJson     String
+  userId          String?
+  user            User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  listingId       String?
+  lookups         VehicleHistoryLookup[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 
   @@index([fingerprint])
   @@index([userId])

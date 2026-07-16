@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { getVehicleHistoryReport } from "@/modules/vehicle-history/history.service";
+import { getSession } from "@/lib/auth";
+import {
+  getVehicleHistoryReport,
+  toViewerPayload,
+} from "@/modules/vehicle-history/history.service";
 
 type Params = Promise<{ id: string }>;
 
@@ -9,13 +13,20 @@ export async function GET(_req: Request, { params }: { params: Params }) {
   if (!report || report.status !== "READY") {
     return NextResponse.json({ error: "Отчёт не найден" }, { status: 404 });
   }
+
+  const session = await getSession();
+  const { payload, viewerPaymentStatus } = toViewerPayload(
+    report,
+    session?.id ?? null
+  );
+
   return NextResponse.json({
     id: report.id,
     queryType: report.queryType,
     queryNorm: report.queryNorm,
-    paymentStatus: report.paymentStatus,
+    paymentStatus: viewerPaymentStatus,
     summary: JSON.parse(report.summaryJson),
-    payload: JSON.parse(report.payloadJson),
+    payload,
     createdAt: report.createdAt,
   });
 }

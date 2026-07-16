@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe, fulfillPromotionBySessionId } from "@/lib/stripe-promotion";
+import { fulfillVehicleHistoryBySessionId } from "@/lib/vehicle-history-billing";
 import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -31,7 +32,11 @@ export async function POST(request: NextRequest) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
       if (session.payment_status === "paid" && session.id) {
-        await fulfillPromotionBySessionId(session.id);
+        if (session.metadata?.type === "vehicle_history") {
+          await fulfillVehicleHistoryBySessionId(session.id);
+        } else {
+          await fulfillPromotionBySessionId(session.id);
+        }
       }
     }
   } catch (err) {
