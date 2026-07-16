@@ -24,9 +24,11 @@ type Props = {
   listing: ListingData;
   className?: string;
   variant?: "default" | "premium" | "horizontal" | "feed";
+  /** First above-the-fold cards — improves LCP */
+  priority?: boolean;
 };
 
-export function ListingCard({ listing, className, variant = "default" }: Props) {
+export function ListingCard({ listing, className, variant = "default", priority = false }: Props) {
   const image = listing.images[0]?.url;
   const categoryName = fixMojibake(listing.category.name);
   const title = fixMojibake(listing.title);
@@ -45,9 +47,10 @@ export function ListingCard({ listing, className, variant = "default" }: Props) 
                 src={image}
                 alt={title}
                 fill
-                unoptimized
+                priority={priority}
                 className="object-cover"
                 sizes="(max-width:640px) 50vw, 25vw"
+                quality={75}
               />
             ) : (
               <div className="flex items-center justify-center h-full text-xs text-[var(--text-muted)] px-2 text-center">
@@ -89,7 +92,7 @@ export function ListingCard({ listing, className, variant = "default" }: Props) 
         <div className="premium-card flex gap-3 p-3 border border-[var(--border)]">
           <div className="relative w-[100px] h-[100px] rounded-[18px] overflow-hidden bg-[var(--bg-secondary)] shrink-0">
             {image ? (
-              <Image src={image} alt="" fill unoptimized className="object-cover" sizes="100px" />
+              <Image src={image} alt="" fill priority={priority} className="object-cover" sizes="100px" quality={75} />
             ) : (
               <div className="flex items-center justify-center h-full text-[10px] text-[var(--text-muted)] p-2 text-center">
                 {categoryName}
@@ -120,9 +123,10 @@ export function ListingCard({ listing, className, variant = "default" }: Props) 
                 src={image}
                 alt={title}
                 fill
-                unoptimized
+                priority={priority}
                 className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
                 sizes="(max-width:640px) 50vw, 25vw"
+                quality={75}
               />
             ) : (
               <div className="flex items-center justify-center h-full text-xs text-[var(--text-muted)]">
@@ -158,9 +162,10 @@ export function ListingCard({ listing, className, variant = "default" }: Props) 
               src={image}
               alt={title}
               fill
-              unoptimized
+              priority={priority}
               className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
               sizes="(max-width:640px) 50vw, 25vw"
+              quality={75}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-xs text-[var(--text-muted)]">

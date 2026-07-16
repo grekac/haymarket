@@ -1,12 +1,29 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CITIES, PROPERTY_TYPES } from "@/lib/utils";
-import { CarSelector, type CarSelection } from "@/components/cars/CarSelector";
-import { CarTrimFilter } from "@/components/cars/CarTrimFilter";
-import { CarBodyFilter } from "@/components/cars/CarBodyFilter";
+import type { CarSelection } from "@/components/cars/CarSelector";
 import { Input } from "@/components/ui/Input";
 import { useState } from "react";
+
+const CarSelector = dynamic(
+  () => import("@/components/cars/CarSelector").then((m) => m.CarSelector),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-24 rounded-xl bg-[var(--bg-secondary)] animate-pulse" aria-hidden />
+    ),
+  }
+);
+const CarTrimFilter = dynamic(
+  () => import("@/components/cars/CarTrimFilter").then((m) => m.CarTrimFilter),
+  { ssr: false }
+);
+const CarBodyFilter = dynamic(
+  () => import("@/components/cars/CarBodyFilter").then((m) => m.CarBodyFilter),
+  { ssr: false }
+);
 
 type Cat = { slug: string; name: string };
 

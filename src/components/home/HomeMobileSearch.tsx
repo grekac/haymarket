@@ -122,7 +122,7 @@ export function HomeMobileSearch({
             >
               <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-[var(--bg-secondary)] shrink-0">
                 {s.imageUrl && (
-                  <Image src={s.imageUrl} alt="" fill unoptimized className="object-cover" sizes="44px" />
+                  <Image src={s.imageUrl} alt="" fill className="object-cover" sizes="44px" />
                 )}
               </div>
               <div className="min-w-0 flex-1">

@@ -16,13 +16,16 @@ const inter = Inter({
   subsets: ["latin", "cyrillic"],
   variable: "--font-inter",
   display: "swap",
+  preload: true,
 });
 
 const armenian = Noto_Sans_Armenian({
   subsets: ["armenian"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600"],
   variable: "--font-armenian",
   display: "swap",
+  // Secondary face — avoid competing with Inter LCP on ru/en
+  preload: false,
 });
 
 export const viewport: Viewport = {

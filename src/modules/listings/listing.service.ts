@@ -1,7 +1,6 @@
 import { listingRepository } from "./listing.repository";
 import { smartSearch, tokenize } from "@/lib/search";
 import { prisma } from "@/lib/prisma";
-import { expirePromotions } from "@/lib/analytics";
 import { isListingPromoted } from "@/lib/promotion";
 import { getVariantCodesFromGenerations } from "@/lib/car-generation-groups";
 import type { Prisma, DealType, PropertyType } from "@prisma/client";
@@ -112,7 +111,7 @@ export class ListingService {
   }
 
   async search(filters: ListingFilters) {
-    await expirePromotions();
+    // Promotions: filter by promotedUntil in sort/isListingPromoted — no write on read path.
     const page = filters.page ?? 1;
     const limit = filters.limit ?? 20;
     const skip = (page - 1) * limit;
@@ -181,7 +180,6 @@ export class ListingService {
   }
 
   async getById(id: string) {
-    await expirePromotions();
     const listing = await this.repo.findById(id);
     if (!listing || listing.status !== "ACTIVE") return null;
     const { recordListingView } = await import("@/lib/analytics");

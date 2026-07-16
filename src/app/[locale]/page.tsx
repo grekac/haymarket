@@ -1,6 +1,5 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { getSession } from "@/lib/auth";
 import { getPersonalizedHome } from "@/lib/personalization";
 import { PremiumSearchBar } from "@/components/home/PremiumSearchBar";
 import { HomeMobileSearch } from "@/components/home/HomeMobileSearch";
@@ -24,7 +23,7 @@ export default async function HomePage({ params }: Props) {
 
   const t = await getTranslations("home");
   const tCat = await getTranslations("categories");
-  const session = await getSession();
+  // No getSession — keeps page cacheable under revalidate.
 
   let categories: Awaited<ReturnType<typeof getHomeCategories>> = [];
   let feed: Awaited<ReturnType<typeof getPersonalizedHome>> = {
@@ -35,10 +34,7 @@ export default async function HomePage({ params }: Props) {
   };
 
   try {
-    [categories, feed] = await Promise.all([
-      getHomeCategories(),
-      getPersonalizedHome(session?.id),
-    ]);
+    [categories, feed] = await Promise.all([getHomeCategories(), getPersonalizedHome()]);
   } catch (error) {
     console.error("[homepage] database error:", error);
   }
@@ -48,7 +44,6 @@ export default async function HomePage({ params }: Props) {
     name: categoryLabel(cat.slug, cat.name, tCat),
   }));
 
-  // Deduped feed for mobile Avito-style grid
   const seen = new Set<string>();
   const mobileFeed = [...feed.newListings, ...feed.popularNearby].filter((l) => {
     if (seen.has(l.id)) return false;
@@ -79,7 +74,6 @@ export default async function HomePage({ params }: Props) {
         }}
       />
 
-      {/* ── Mobile (Avito-style) ── */}
       <div className="md:hidden">
         <div className="px-3 pt-2 pb-3 sticky top-12 z-30 bg-[var(--bg-primary)]/95 backdrop-blur-md">
           <HomeMobileSearch defaultCity="Ереван" searchInLabel={searchIn} />
@@ -96,15 +90,14 @@ export default async function HomePage({ params }: Props) {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-x-2.5 gap-y-4">
-              {mobileFeed.map((l) => (
-                <ListingCard key={l.id} listing={l} variant="feed" />
+              {mobileFeed.map((l, i) => (
+                <ListingCard key={l.id} listing={l} variant="feed" priority={i < 4} />
               ))}
             </div>
           )}
         </section>
       </div>
 
-      {/* ── Desktop ── */}
       <div className="hidden md:block">
         <section className="px-4 pt-6 pb-8 max-w-6xl mx-auto">
           <div className="animate-fade-up animate-delay-1">
@@ -138,8 +131,8 @@ export default async function HomePage({ params }: Props) {
             </div>
           ) : (
             <div className="grid grid-cols-3 lg:grid-cols-4 gap-4">
-              {feed.newListings.map((l) => (
-                <ListingCard key={l.id} listing={l} variant="premium" />
+              {feed.newListings.map((l, i) => (
+                <ListingCard key={l.id} listing={l} variant="premium" priority={i < 4} />
               ))}
             </div>
           )}

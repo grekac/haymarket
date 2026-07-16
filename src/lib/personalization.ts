@@ -1,5 +1,5 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { cityCoords, haversineKm } from "@/lib/geo";
 import { listingService } from "@/modules/listings/listing.service";
 
 export type PersonalInsight = {
@@ -11,61 +11,51 @@ export type PersonalInsight = {
   accent?: "blue" | "emerald" | "neutral";
 };
 
-export async function getPersonalizedHome(userId?: string) {
-  const center = cityCoords("Ереван");
+type HomeFeed = {
+  insights: PersonalInsight[];
+  newListings: Awaited<ReturnType<typeof listingService.search>>["items"];
+  popularNearby: Awaited<ReturnType<typeof listingService.search>>["items"];
+  total: number;
+};
+
+/** Public home feed — cached; no full-table geo scan. */
+async function loadPublicHomeFeed(): Promise<HomeFeed> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [
-    nearbyListings,
-    newListings,
-    popularNearby,
-    electronics,
-    savedSearches,
-    userListings,
-  ] = await Promise.all([
-    prisma.listing.findMany({
-      where: { status: "ACTIVE", latitude: { not: null }, longitude: { not: null } },
-      select: { id: true, latitude: true, longitude: true, createdAt: true },
-    }),
+  const [newListings, popularNearby, electronics, newTodayCount, carsCount] = await Promise.all([
     listingService.search({ limit: 6, sort: "newest" }),
     listingService.search({ limit: 6, sort: "popular", city: "Ереван" }),
     prisma.listing.findMany({
       where: {
         status: "ACTIVE",
-        OR: [
-          { title: { contains: "iPhone" } },
-          { title: { contains: "iphone" } },
-        ],
+        OR: [{ title: { contains: "iPhone" } }, { title: { contains: "iphone" } }],
       },
       orderBy: { price: "asc" },
       take: 5,
-      include: { images: { take: 1 } },
+      select: { id: true, title: true, price: true },
     }),
-    userId
-      ? prisma.savedSearch.findMany({ where: { userId }, take: 3 })
-      : Promise.resolve([]),
-    userId
-      ? prisma.listing.findMany({
-          where: { userId },
-          orderBy: { views: "desc" },
-          take: 1,
-        })
-      : Promise.resolve([]),
+    prisma.listing.count({
+      where: { status: "ACTIVE", createdAt: { gte: today } },
+    }),
+    prisma.listing.count({
+      where: {
+        status: "ACTIVE",
+        latitude: { not: null },
+        longitude: { not: null },
+        city: { in: ["Ереван", "Yerevan", "Երևան"] },
+      },
+    }),
   ]);
-
-  const nearbyCount = nearbyListings.filter((l) =>
-    haversineKm(center.lat, center.lng, l.latitude!, l.longitude!) <= 15
-  ).length;
 
   const insights: PersonalInsight[] = [];
 
-  if (nearbyCount > 0) {
+  if (carsCount > 0) {
     insights.push({
       id: "nearby",
       type: "nearby",
-      title: `${nearbyCount} новых рядом с вами`,
-      subtitle: "В радиусе 15 км от Еревана",
+      title: `${carsCount}+ объявлений в Ереване`,
+      subtitle: "Смотрите на карте рядом с вами",
       href: "/map",
       accent: "blue",
     });
@@ -87,9 +77,67 @@ export async function getPersonalizedHome(userId?: string) {
     }
   }
 
+  const car = await prisma.listing.findFirst({
+    where: { status: "ACTIVE", category: { slug: "cars" } },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, title: true },
+  });
+  if (car) {
+    insights.push({
+      id: "car-match",
+      type: "match",
+      title: "Свежие авто на HayMarket",
+      subtitle: car.title.slice(0, 50),
+      href: `/listing/${car.id}`,
+      accent: "blue",
+    });
+  }
+
+  if (newTodayCount > 0 && insights.length < 4) {
+    insights.push({
+      id: "new-today",
+      type: "new",
+      title: `${newTodayCount} объявлений сегодня`,
+      subtitle: "Свежие предложения на HayMarket",
+      href: "/search?sort=newest",
+      accent: "neutral",
+    });
+  }
+
+  return {
+    insights: insights.slice(0, 4),
+    newListings: newListings.items,
+    popularNearby: popularNearby.items,
+    total: newListings.total,
+  };
+}
+
+const getCachedPublicHome = unstable_cache(loadPublicHomeFeed, ["home-public-feed"], {
+  revalidate: 60,
+  tags: ["home-feed", "listings"],
+});
+
+/** Optional per-user insights (not cached) — keep light. */
+async function loadUserInsights(userId: string): Promise<PersonalInsight[]> {
+  const insights: PersonalInsight[] = [];
+
+  const [savedSearches, userListings] = await Promise.all([
+    prisma.savedSearch.findMany({ where: { userId }, take: 3 }),
+    prisma.listing.findMany({
+      where: { userId },
+      orderBy: { views: "desc" },
+      take: 1,
+      select: { id: true, title: true },
+    }),
+  ]);
+
   for (const search of savedSearches) {
     let filters: Record<string, string> = {};
-    try { filters = JSON.parse(search.filters); } catch { continue; }
+    try {
+      filters = JSON.parse(search.filters);
+    } catch {
+      continue;
+    }
 
     const match = await prisma.listing.findFirst({
       where: {
@@ -99,36 +147,19 @@ export async function getPersonalizedHome(userId?: string) {
         ...(filters.city ? { city: filters.city } : {}),
       },
       orderBy: { createdAt: "desc" },
+      select: { id: true, title: true },
     });
 
     if (match) {
-      const label = filters.q || search.name;
       insights.push({
         id: `match-${search.id}`,
         type: "match",
-        title: `Появилось: ${label}`,
+        title: `Появилось: ${filters.q || search.name}`,
         subtitle: match.title.slice(0, 50),
         href: `/listing/${match.id}`,
         accent: "blue",
       });
       break;
-    }
-  }
-
-  if (!insights.some((i) => i.type === "match")) {
-    const car = await prisma.listing.findFirst({
-      where: { status: "ACTIVE", category: { slug: "cars" } },
-      orderBy: { createdAt: "desc" },
-    });
-    if (car) {
-      insights.push({
-        id: "car-match",
-        type: "match",
-        title: "Появилась машина, которую вы искали",
-        subtitle: car.title.slice(0, 50),
-        href: `/listing/${car.id}`,
-        accent: "blue",
-      });
     }
   }
 
@@ -153,22 +184,25 @@ export async function getPersonalizedHome(userId?: string) {
     }
   }
 
-  const newToday = nearbyListings.filter((l) => l.createdAt >= today).length;
-  if (newToday > 0 && insights.length < 4) {
-    insights.push({
-      id: "new-today",
-      type: "new",
-      title: `${newToday} объявлений сегодня`,
-      subtitle: "Свежие предложения на HayMarket",
-      href: "/search?sort=newest",
-      accent: "neutral",
-    });
-  }
+  return insights.slice(0, 2);
+}
 
-  return {
-    insights: insights.slice(0, 4),
-    newListings: newListings.items,
-    popularNearby: popularNearby.items,
-    total: newListings.total,
-  };
+/**
+ * Home data. Without userId — fully cacheable public feed.
+ * With userId — merges light personal insights (extra queries, no geo scan).
+ */
+export async function getPersonalizedHome(userId?: string): Promise<HomeFeed> {
+  const feed = await getCachedPublicHome();
+  if (!userId) return feed;
+
+  try {
+    const personal = await loadUserInsights(userId);
+    if (personal.length === 0) return feed;
+    const merged = [...personal, ...feed.insights]
+      .filter((insight, i, arr) => arr.findIndex((x) => x.id === insight.id) === i)
+      .slice(0, 4);
+    return { ...feed, insights: merged };
+  } catch {
+    return feed;
+  }
 }

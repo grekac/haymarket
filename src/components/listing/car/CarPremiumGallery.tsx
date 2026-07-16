@@ -186,7 +186,6 @@ export function CarPremiumGallery({
                   sizes="100vw"
                   quality={90}
                   priority={i === 0}
-                  unoptimized
                   draggable={false}
                 />
               </div>
@@ -234,7 +233,6 @@ export function CarPremiumGallery({
               sizes="66vw"
               quality={92}
               priority={current === 0}
-              unoptimized
             />
           </div>
 
@@ -290,7 +288,7 @@ export function CarPremiumGallery({
                     : "border-transparent opacity-70 hover:opacity-100"
                 )}
               >
-                <Image src={img.url} alt="" fill className="object-cover" sizes="64px" unoptimized />
+                <Image src={img.url} alt="" fill className="object-cover" sizes="64px" />
               </button>
             ))}
           </div>
@@ -319,7 +317,6 @@ export function CarPremiumGallery({
               className="object-contain p-6 md:p-12"
               sizes="100vw"
               quality={100}
-              unoptimized
             />
           </div>
           {images.length > 1 && (

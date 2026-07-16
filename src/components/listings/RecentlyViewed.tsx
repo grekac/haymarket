@@ -59,7 +59,7 @@ export function RecentlyViewed() {
           >
             <div className="relative h-[90px] bg-[var(--bg-secondary)]">
               {item.image ? (
-                <Image src={item.image} alt="" fill unoptimized className="object-cover" sizes="140px" />
+                <Image src={item.image} alt="" fill className="object-cover" sizes="140px" />
               ) : null}
             </div>
             <div className="p-2.5">

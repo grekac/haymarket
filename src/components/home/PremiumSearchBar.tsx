@@ -104,7 +104,7 @@ export function PremiumSearchBar({ large, defaultValue = "" }: { large?: boolean
               className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--bg-hover)] transition-colors"
             >
               <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-[var(--bg-secondary)] shrink-0">
-                {s.imageUrl && <Image src={s.imageUrl} alt="" fill unoptimized className="object-cover" sizes="44px" />}
+                {s.imageUrl && <Image src={s.imageUrl} alt="" fill className="object-cover" sizes="44px" />}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium truncate">{s.title}</p>

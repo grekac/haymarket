@@ -45,9 +45,9 @@ export function CategoryCompactCard({
             alt={name}
             fill
             priority={priority}
-            unoptimized
             className="object-cover"
             sizes={isMd ? "20vw" : "15vw"}
+            quality={75}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">

@@ -91,7 +91,7 @@ export default function ComparePage() {
                   <th key={l.id} className="p-3 align-top">
                     <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-[var(--bg-secondary)] mb-2">
                       {l.images[0]?.url && (
-                        <Image src={l.images[0].url} alt="" fill unoptimized className="object-cover" />
+                        <Image src={l.images[0].url} alt="" fill className="object-cover" />
                       )}
                     </div>
                     <Link href={`/listing/${l.id}`} className="font-semibold text-sm line-clamp-2 hover:underline">

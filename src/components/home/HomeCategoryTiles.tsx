@@ -57,7 +57,6 @@ export function HomeCategoryTiles({ categories }: { categories: Cat[] }) {
               alt=""
               width={72}
               height={72}
-              unoptimized
               className="absolute -bottom-1 -right-1 w-[68px] h-[68px] object-contain drop-shadow-md"
             />
           ) : (

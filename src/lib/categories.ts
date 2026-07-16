@@ -42,6 +42,20 @@ export async function getHomeCategories() {
   )();
 }
 
+/** All active categories for search filters — cached. */
+export async function getActiveCategories() {
+  return unstable_cache(
+    () =>
+      prisma.category.findMany({
+        where: { isActive: true },
+        orderBy: { sortOrder: "asc" },
+        select: { slug: true, name: true },
+      }),
+    ["active-categories"],
+    { revalidate: 300, tags: ["categories"] }
+  )();
+}
+
 export async function getCategoryHub(slug: string) {
   const category = await prisma.category.findFirst({
     where: { slug, isActive: true },

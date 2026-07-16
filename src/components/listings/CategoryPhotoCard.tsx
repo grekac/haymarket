@@ -38,9 +38,9 @@ export function CategoryPhotoCard({
           alt={name}
           fill
           priority={priority}
-          unoptimized
           className="object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
           sizes="(max-width: 640px) 50vw, 25vw"
+          quality={75}
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center">

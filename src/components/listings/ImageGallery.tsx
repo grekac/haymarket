@@ -38,7 +38,6 @@ export function ImageGallery({ images, fullBleed }: { images: { url: string }[];
           sizes="100vw"
           quality={95}
           priority
-          unoptimized
         />
         {images.length > 1 && (
           <>
@@ -69,7 +68,7 @@ export function ImageGallery({ images, fullBleed }: { images: { url: string }[];
           <button className="absolute top-4 right-4 text-white z-10 p-2" onClick={() => setFullscreen(false)}>
             <X className="w-7 h-7" />
           </button>
-          <Image src={images[current].url} alt="" fill className="object-contain p-4" sizes="100vw" quality={100} unoptimized />
+          <Image src={images[current].url} alt="" fill className="object-contain p-4" sizes="100vw" quality={100} />
           {images.length > 1 && (
             <>
               <button onClick={(e) => { e.stopPropagation(); prev(); }} className="absolute left-4 text-white"><ChevronLeft className="w-10 h-10" /></button>

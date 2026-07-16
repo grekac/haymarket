@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { prisma } from "@/lib/prisma";
+import { getActiveCategories } from "@/lib/categories";
 import { listingService } from "@/modules/listings/listing.service";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { PremiumSearchBar } from "@/components/home/PremiumSearchBar";
@@ -36,29 +36,31 @@ export default async function SearchPage({ params, searchParams }: Props) {
   const t = await getTranslations("search");
   const p = await searchParams;
 
-  let categories: Awaited<ReturnType<typeof prisma.category.findMany>> = [];
+  let categories: Awaited<ReturnType<typeof getActiveCategories>> = [];
   let result = { items: [] as Awaited<ReturnType<typeof listingService.search>>["items"], total: 0, page: 1, totalPages: 0 };
 
   try {
-    categories = await prisma.category.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } });
-    result = await listingService.search({
-      search: p.q,
-      category: p.category,
-      city: p.city,
-      minPrice: p.minPrice ? Number(p.minPrice) : undefined,
-      maxPrice: p.maxPrice ? Number(p.maxPrice) : undefined,
-      sort: (p.sort as "newest") ?? "newest",
-      page: p.page ? Number(p.page) : 1,
-      brand: p.brand,
-      model: p.model,
-      generation: p.generation,
-      body: p.body,
-      yearFrom: p.yearFrom ? Number(p.yearFrom) : undefined,
-      yearTo: p.yearTo ? Number(p.yearTo) : undefined,
-      propertyType: p.propertyType,
-      dealType: p.dealType,
-      rooms: p.rooms ? Number(p.rooms) : undefined,
-    });
+    [categories, result] = await Promise.all([
+      getActiveCategories(),
+      listingService.search({
+        search: p.q,
+        category: p.category,
+        city: p.city,
+        minPrice: p.minPrice ? Number(p.minPrice) : undefined,
+        maxPrice: p.maxPrice ? Number(p.maxPrice) : undefined,
+        sort: (p.sort as "newest") ?? "newest",
+        page: p.page ? Number(p.page) : 1,
+        brand: p.brand,
+        model: p.model,
+        generation: p.generation,
+        body: p.body,
+        yearFrom: p.yearFrom ? Number(p.yearFrom) : undefined,
+        yearTo: p.yearTo ? Number(p.yearTo) : undefined,
+        propertyType: p.propertyType,
+        dealType: p.dealType,
+        rooms: p.rooms ? Number(p.rooms) : undefined,
+      }),
+    ]);
   } catch (error) {
     console.error("[search] database error:", error);
   }
@@ -92,8 +94,8 @@ export default async function SearchPage({ params, searchParams }: Props) {
             <p className="text-center py-20 text-[var(--text-muted)]">{t("empty")}</p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
-              {result.items.map((l) => (
-                <ListingCard key={l.id} listing={l} variant="premium" />
+              {result.items.map((l, i) => (
+                <ListingCard key={l.id} listing={l} variant="premium" priority={i < 3} />
               ))}
             </div>
           )}
