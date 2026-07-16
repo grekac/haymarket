@@ -13,9 +13,9 @@
 
 | Метка | Состояние |
 |-------|-----------|
-| Last commit on main | `1d6f8a6` Avito mobile home / my ads / create flow |
-| Vehicle-history code | **uncommitted** (локально) |
-| Seed 20 listings | локальный скрипт есть; прод не засеян (нужен DATABASE_URL/SETUP) |
+| Last local commit | `c014b0b` (ahead of origin) |
+| Vehicle-history code | committed through Phase 5 |
+| Seed 20 listings | still untracked locally |
 
 ---
 
