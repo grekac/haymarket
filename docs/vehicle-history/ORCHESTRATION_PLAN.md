@@ -1,4 +1,4 @@
-# HayPass Orchestration Plan
+﻿# HayPass Orchestration Plan
 
 Статус оркестрации реализации сервиса проверки истории авто внутри HayMarket.
 
@@ -61,8 +61,8 @@
 - [x] «Мои отчёты» в профиле (`/api/vehicle-history/my` + UI)
 - [x] Админ: audit log, partner keys, счётчики lookups
 - [x] Build / reviews / фиксы
-- [ ] Коммит поимённо
-- [ ] Фаза «готово»
+- [x] Коммит поимённо
+- [x] Фаза «готово»
 
 ---
 
@@ -94,3 +94,4 @@
 | 2026-07-16 | Старт оркестрации. Phase 1 код есть uncommitted → приёмка. |
 | 2026-07-16 | Phase 1 commit `0c6b977`. Live API blocked: нет локального Postgres/Docker. |
 | 2026-07-16 | Phase 2 старт. Дефолт: FREE базовый отчёт; unlock full 2490 AMD (demo/Stripe); enrichment только после PAID; без фейковых verified ДТП. |
+| 2026-07-16 | Phase 3 commit: HayPass profile reports + admin monitoring (stats, audit, partner keys). |
