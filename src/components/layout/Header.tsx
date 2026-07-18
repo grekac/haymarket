@@ -22,6 +22,7 @@ export async function Header() {
           <div className="flex-1" />
 
           <LocaleSwitcher compact />
+          <ThemeToggle />
           <HeaderAuth variant="mobile" />
           <Link
             href="/search"

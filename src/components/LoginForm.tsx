@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useRouter, Link } from "@/i18n/navigation";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -31,7 +31,8 @@ export function LoginForm() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
 
-      router.push(searchParams.get("next") || "/");
+      const next = searchParams.get("next") || "/";
+      router.push(next);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка");

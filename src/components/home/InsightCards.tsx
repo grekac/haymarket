@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { MapPin, TrendingDown, Sparkles, Eye, ChevronRight } from "lucide-react";
 import type { PersonalInsight } from "@/lib/personalization";
 import { cn } from "@/lib/utils";
@@ -12,9 +12,9 @@ const ICONS = {
 };
 
 const ACCENTS = {
-  blue: "from-[var(--accent-soft)] to-white border-[var(--brand)]/10",
-  emerald: "from-[var(--emerald-soft)] to-white border-[var(--emerald)]/10",
-  neutral: "from-[var(--bg-secondary)] to-white border-[var(--border)]",
+  blue: "from-[var(--accent-soft)] to-[var(--bg-card)] border-[var(--accent)]/10",
+  emerald: "from-[var(--emerald-soft)] to-[var(--bg-card)] border-[var(--emerald)]/10",
+  neutral: "from-[var(--bg-secondary)] to-[var(--bg-card)] border-[var(--border)]",
 };
 
 export function InsightCards({ insights }: { insights: PersonalInsight[] }) {

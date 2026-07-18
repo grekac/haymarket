@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
@@ -11,11 +11,18 @@ import { MyListingActions } from "@/components/listings/MyListingActions";
 import { SellerAnalytics } from "@/components/seller/SellerAnalytics";
 import { MyVehicleReports } from "@/components/vehicle-history/MyVehicleReports";
 import { VerifyPhoneCard } from "@/components/profile/VerifyPhoneCard";
-
 import { PromotionCheckoutBanner } from "@/components/listings/PromotionCheckoutBanner";
-
 import { BackButton } from "@/components/ui/BackButton";
 import { RecentlyViewed } from "@/components/listings/RecentlyViewed";
+import { fixMojibake } from "@/lib/text-encoding";
+
+const STATUS_LABEL: Record<string, string> = {
+  ACTIVE: "Активно",
+  PENDING: "На модерации",
+  REJECTED: "Отклонено",
+  SOLD: "Продано",
+  ARCHIVED: "В архиве",
+};
 
 export default async function ProfilePage({
   searchParams,
@@ -27,20 +34,46 @@ export default async function ProfilePage({
 
   const { promoted } = await searchParams;
 
-  const listings = await prisma.listing.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
-    include: { images: { take: 1 }, category: true },
-  });
+  let listings: Array<{
+    id: string;
+    title: string;
+    status: string;
+    isPromoted: boolean;
+    promotedUntil: Date | null;
+    category: { name: string };
+  }> = [];
+  let dbUser: { isVerified: boolean; ratingAvg: number; ratingCount: number } | null = null;
+  let favCount = 0;
+  let loadError: string | null = null;
 
-  const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
-
-  const favCount = await prisma.favorite.count({ where: { userId: user.id } });
+  try {
+    const [rows, userRow, favs] = await Promise.all([
+      prisma.listing.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        include: { images: { take: 1 }, category: true },
+      }),
+      prisma.user.findUnique({ where: { id: user.id } }),
+      prisma.favorite.count({ where: { userId: user.id } }),
+    ]);
+    listings = rows;
+    dbUser = userRow;
+    favCount = favs;
+  } catch (e) {
+    console.error("[profile] database error:", e);
+    loadError =
+      "Не удалось загрузить данные профиля. Возможно, схема БД не синхронизирована (нужен prisma db push).";
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 md:py-10">
       <BackButton href="/" />
       <PromotionCheckoutBanner status={promoted} />
+      {loadError && (
+        <div className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
+          {loadError}
+        </div>
+      )}
       <VerifyPhoneCard isVerified={dbUser?.isVerified ?? false} />
       <Card className="p-6 mb-6 shadow-[var(--shadow-md)]">
         <div className="w-16 h-16 rounded-full bg-[var(--accent)] text-[var(--accent-fg)] flex items-center justify-center text-2xl font-bold mb-4">
@@ -82,11 +115,11 @@ export default async function ProfilePage({
           {listings.map((l) => (
             <div key={l.id} className="flex items-center gap-4 p-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]">
               <Link href={`/listing/${l.id}`} className="flex-1 hover:opacity-80">
-                <p className="font-medium">{l.title}</p>
+                <p className="font-medium">{fixMojibake(l.title)}</p>
                 <p className="text-xs text-[var(--text-muted)]">
-                  {l.category.name} ·{" "}
+                  {fixMojibake(l.category.name)} ·{" "}
                   <span className={l.status === "PENDING" ? "text-amber-600 font-medium" : ""}>
-                    {l.status === "PENDING" ? "На модерации" : l.status}
+                    {STATUS_LABEL[l.status] ?? l.status}
                   </span>
                 </p>
               </Link>

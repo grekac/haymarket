@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +13,9 @@ export function BackButton({ href = "/", label = "Назад", className, sticky
   return (
     <div
       className={cn(
-        sticky && "sticky top-0 z-30 glass border-b border-[var(--border)]/60 -mx-4 px-4 py-3 mb-4 md:static md:border-0 md:bg-transparent md:backdrop-blur-none md:-mx-0 md:px-0 md:py-0 md:mb-6",
+        sticky &&
+          "sticky top-12 z-30 glass border-b border-[var(--border)]/60 -mx-4 px-4 py-3 mb-4 md:static md:top-auto md:border-0 md:bg-transparent md:backdrop-blur-none md:-mx-0 md:px-0 md:py-0 md:mb-6",
+        !sticky && "mb-4 md:mb-6",
         className
       )}
     >

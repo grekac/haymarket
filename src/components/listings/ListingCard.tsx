@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { formatPrice, formatDate, cn } from "@/lib/utils";
 import { fixMojibake } from "@/lib/text-encoding";
 import { isListingPromoted } from "@/lib/promotion";

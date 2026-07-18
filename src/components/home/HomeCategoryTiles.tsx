@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { categoryLink } from "@/lib/categories";
 import { CategoryIcon } from "@/components/listings/CategoryIcon";
 import { cn } from "@/lib/utils";
